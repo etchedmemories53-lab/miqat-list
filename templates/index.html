@@ -57,25 +57,27 @@
       <table class="miqaats">
         <thead>
           <tr>
-            <th>Gregorian</th>
-            <th>Day</th>
-            <th>Hijri</th>
-            {% if city %}
-              <th>Sunrise</th>
-              <th>Sunset</th>
-            {% endif %}
+            <th>Date</th>
+            {% if city %}<th>Sun</th>{% endif %}
             <th>Miqaat</th>
           </tr>
         </thead>
         <tbody>
           {% for entry in rows %}
             <tr class="{{ 'today' if entry.gregorian_date == today_iso else '' }}">
-              <td class="nowrap">{{ entry.gregorian_date }}</td>
-              <td class="nowrap">{{ entry.day_name }}</td>
-              <td class="nowrap">{{ entry.hijri_date.day }} {{ entry.hijri_date.month_name }} {{ entry.hijri_date.year }}H</td>
+              <td class="date-cell">
+                <div class="greg">{{ entry.gregorian_date }} &middot; {{ entry.day_name }}</div>
+                <div class="hijri">
+                  {{ entry.hijri_date.day }}
+                  <span class="month-long">{{ entry.hijri_date.month_name }}</span><span class="month-short">{{ entry.hijri_date.month_name_short }}</span>
+                  {{ entry.hijri_date.year }}H
+                </div>
+              </td>
               {% if city %}
-                <td class="nowrap">{{ entry.sun.sunrise or "—" }}</td>
-                <td class="nowrap">{{ entry.sun.sunset or "—" }}</td>
+                <td class="sun-cell">
+                  <div>&#9728; {{ entry.sun.sunrise or "—" }}</div>
+                  <div>&#9789; {{ entry.sun.sunset or "—" }}</div>
+                </td>
               {% endif %}
               <td>
                 <ul>

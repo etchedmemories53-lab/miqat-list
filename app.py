@@ -29,6 +29,7 @@ def _hijri_payload(hijri: HijriDate) -> dict:
         "year": hijri.year,
         "month": hijri.month,
         "month_name": hijri.month_name,
+        "month_name_short": hijri.month_name_short,
         "day": hijri.day,
     }
 

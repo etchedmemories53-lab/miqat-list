@@ -205,12 +205,31 @@ table.miqaats td {
   vertical-align: top;
 }
 
-table.miqaats td.nowrap {
+table.miqaats tr.today td {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+table.miqaats td.date-cell,
+table.miqaats td.sun-cell {
   white-space: nowrap;
 }
 
-table.miqaats tr.today td {
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+table.miqaats td.date-cell .greg {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+table.miqaats td.date-cell .hijri {
+  font-weight: 600;
+}
+
+table.miqaats td.sun-cell {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.month-short {
+  display: none;
 }
 
 table.miqaats td ul {
@@ -267,4 +286,100 @@ footer code {
   background: var(--border);
   padding: 0.1rem 0.3rem;
   border-radius: 4px;
+}
+
+@media (max-width: 640px) {
+  main {
+    padding: 1rem 0.75rem 3rem;
+  }
+
+  h1 {
+    font-size: 1.15rem;
+  }
+
+  /* Compact controls: short fields side by side, city full-width, actions in one row */
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    gap: 0.6rem;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .controls input, .controls select {
+    width: 100%;
+  }
+
+  .controls .city-field,
+  .controls .city-search input[type="text"],
+  .controls button[type="submit"] {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .month-long {
+    display: none;
+  }
+
+  .month-short {
+    display: inline;
+  }
+
+  /* Collapse the table into stacked cards - one per day - instead of a wide,
+     mostly-empty grid that forces sideways scrolling on a phone. */
+  table.miqaats thead {
+    display: none;
+  }
+
+  table.miqaats, table.miqaats tbody, table.miqaats tr, table.miqaats td {
+    display: block;
+    width: 100%;
+  }
+
+  table.miqaats tr {
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.6rem 0.75rem;
+  }
+
+  table.miqaats tr.today {
+    border-color: var(--accent);
+  }
+
+  table.miqaats td {
+    padding: 0;
+    border-bottom: none;
+  }
+
+  table.miqaats td.date-cell {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  table.miqaats td.date-cell .greg {
+    order: 2;
+  }
+
+  table.miqaats td.sun-cell {
+    display: flex;
+    gap: 1rem;
+    padding-bottom: 0.4rem;
+    margin-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  table.miqaats td ul {
+    gap: 0.4rem;
+  }
+
+  .meta {
+    font-size: 0.7rem;
+  }
 }
