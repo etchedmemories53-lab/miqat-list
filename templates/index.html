@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Miqat List</title>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main>
+    <div class="page-header">
+      <h1>Miqat List &mdash; {{ hijri_year }}H</h1>
+      <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Toggle light/dark mode">🌙</button>
+    </div>
+
+    <form method="get" class="controls">
+      <label>
+        Hijri Year
+        <input type="number" name="year" value="{{ hijri_year }}" min="1" max="1600">
+      </label>
+      <label>
+        Priority
+        <select name="priority">
+          <option value="" {{ "selected" if priority is none else "" }}>All</option>
+          <option value="1" {{ "selected" if priority == 1 else "" }}>1 &mdash; Miqat</option>
+          <option value="2" {{ "selected" if priority == 2 else "" }}>2</option>
+          <option value="3" {{ "selected" if priority == 3 else "" }}>3</option>
+        </select>
+      </label>
+      <label class="city-field">
+        City
+        <div class="city-search">
+          <input type="text" id="city-search" autocomplete="off" placeholder="Search a city..."
+                 value="{{ (city.name + ', ' + city.country) if city else '' }}">
+          <input type="hidden" name="city_id" id="city-id" value="{{ city.id if city else '' }}">
+          <div id="city-results" class="city-results" hidden></div>
+        </div>
+      </label>
+      <button type="submit">Go</button>
+      <a class="year-nav" href="?year={{ hijri_year - 1 }}&priority={{ priority if priority is not none else '' }}&city_id={{ city.id if city else '' }}">&larr; {{ hijri_year - 1 }}H</a>
+      <a class="year-nav" href="?year={{ hijri_year + 1 }}&priority={{ priority if priority is not none else '' }}&city_id={{ city.id if city else '' }}">{{ hijri_year + 1 }}H &rarr;</a>
+      <a class="csv-link"
+         href="{{ url_for('download_csv', year=hijri_year, priority=(priority if priority is not none else ''), city_id=(city.id if city else '')) }}">
+        &#8681; Download CSV
+      </a>
+    </form>
+
+    {% macro miqaat_table(rows) %}
+      <table class="miqaats">
+        <thead>
+          <tr>
+            <th>Gregorian</th>
+            <th>Day</th>
+            <th>Hijri</th>
+            {% if city %}
+              <th>Sunrise</th>
+              <th>Sunset</th>
+            {% endif %}
+            <th>Miqaat</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for entry in rows %}
+            <tr class="{{ 'today' if entry.gregorian_date == today_iso else '' }}">
+              <td class="nowrap">{{ entry.gregorian_date }}</td>
+              <td class="nowrap">{{ entry.day_name }}</td>
+              <td class="nowrap">{{ entry.hijri_date.day }} {{ entry.hijri_date.month_name }} {{ entry.hijri_date.year }}H</td>
+              {% if city %}
+                <td class="nowrap">{{ entry.sun.sunrise or "—" }}</td>
+                <td class="nowrap">{{ entry.sun.sunset or "—" }}</td>
+              {% endif %}
+              <td>
+                <ul>
+                  {% for m in entry.miqaats %}
+                    <li class="priority-{{ m.priority }}">
+                      <span class="title">{{ m.title }}</span>
+                      {% if m.description %}<span class="description">{{ m.description }}</span>{% endif %}
+                      <span class="meta">phase: {{ m.phase }} &middot; priority: {{ m.priority }}</span>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endmacro %}
+
+    {% if past_entries %}
+      <details class="previous-dates">
+        <summary>Previous dates ({{ past_entries|length }})</summary>
+        {{ miqaat_table(past_entries) }}
+      </details>
+    {% endif %}
+
+    {% if upcoming_entries %}
+      {{ miqaat_table(upcoming_entries) }}
+    {% else %}
+      <p class="none">No upcoming miqaats found for {{ hijri_year }}H{% if priority %} at priority {{ priority }}{% endif %}.</p>
+    {% endif %}
+
+    <footer>
+      Data ported from <a href="https://github.com/mygulamali/mumineen_calendar_js" target="_blank" rel="noopener">mumineen_calendar_js</a> (MIT).
+      City search from <a href="https://github.com/yaph/geonamescache" target="_blank" rel="noopener">geonamescache</a>; sunrise/sunset computed with <a href="https://github.com/sffjunkie/astral" target="_blank" rel="noopener">astral</a> &mdash; both offline, no external API calls.
+      <br>
+      JSON API: <code>/api/miqats/today</code>, <code>/api/miqats/YYYY-MM-DD</code> (Gregorian date), <code>/api/miqats/year/YYYY</code> (Hijri year) &mdash; all accept <code>?priority=1|2|3&amp;city_id=</code>. City search: <code>/api/cities?q=</code>. CSV export: <code>/download.csv?year=&amp;priority=&amp;city_id=</code>.
+    </footer>
+  </main>
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

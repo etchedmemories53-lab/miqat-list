@@ -1,0 +1,59 @@
+name: Build and deploy to Cloud Run
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch: {}
+
+env:
+  SERVICE_NAME: miqat-list
+  REGION: ${{ vars.GCP_REGION }}
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  REPOSITORY: ${{ vars.GCP_AR_REPOSITORY }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # required for Workload Identity Federation — no stored key needed
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+
+      - name: Build image
+        run: |
+          IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPOSITORY}/${SERVICE_NAME}:${{ github.sha }}"
+          docker build -t "$IMAGE" .
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Push image
+        run: docker push "${IMAGE}"
+
+      # --allow-unauthenticated: this app has no login of its own, so it needs
+      # to be reachable without a Google IAM token on every request.
+      # --service-account: without this, Cloud Run runs the container under
+      # the project's default Compute Engine service account. This app has no
+      # secrets or external APIs to reach, but a dedicated runtime identity
+      # (created by gcp/setup.sh) keeps it isolated from other apps regardless.
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.REGION }}
+          image: ${{ env.IMAGE }}
+          flags: --allow-unauthenticated --service-account=${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}
