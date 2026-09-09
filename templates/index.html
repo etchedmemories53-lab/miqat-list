@@ -1,24 +1,10 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Miqat List</title>
-  <script>
-    (function () {
-      try {
-        var t = localStorage.getItem("theme");
-        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
-      } catch (e) {}
-    })();
-  </script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-  <main>
+{% extends "base.html" %}
+
+{% block title %}Miqat List &mdash; {{ hijri_year }}H{% endblock %}
+
+{% block content %}
     <div class="page-header">
       <h1>Miqat List &mdash; {{ hijri_year }}H</h1>
-      <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Toggle light/dark mode">🌙</button>
     </div>
 
     <form method="get" class="controls">
@@ -30,9 +16,9 @@
         Priority
         <select name="priority">
           <option value="" {{ "selected" if priority is none else "" }}>All</option>
-          <option value="1" {{ "selected" if priority == 1 else "" }}>1 &mdash; Miqat</option>
-          <option value="2" {{ "selected" if priority == 2 else "" }}>2</option>
-          <option value="3" {{ "selected" if priority == 3 else "" }}>3</option>
+          {% for pid in ["1", "2", "3", "4"] %}
+            <option value="{{ pid }}" {{ "selected" if priority == pid else "" }}>{{ pid }} &mdash; {{ priority_names.get(pid, pid) }}</option>
+          {% endfor %}
         </select>
       </label>
       <label class="city-field">
@@ -51,6 +37,7 @@
          href="{{ url_for('download_csv', year=hijri_year, priority=(priority if priority is not none else ''), city_id=(city.id if city else '')) }}">
         &#8681; Download CSV
       </a>
+      <a class="add-link" href="{{ url_for('new_miqaat_form') }}">+ Add Miqat/Majalis</a>
     </form>
 
     {% macro miqaat_table(rows) %}
@@ -82,10 +69,28 @@
               <td>
                 <ul>
                   {% for m in entry.miqaats %}
-                    <li class="priority-{{ m.priority }}">
+                    <li class="priority-{{ m.priority_id }}">
                       <span class="title">{{ m.title }}</span>
                       {% if m.description %}<span class="description">{{ m.description }}</span>{% endif %}
-                      <span class="meta">phase: {{ m.phase }} &middot; priority: {{ m.priority }}</span>
+                      <span class="meta">phase: {{ m.phase }} &middot; priority: {{ m.priority_id }} &mdash; {{ priority_names.get(m.priority_id, m.priority_id) }}{% if m.recurrence_label %} &middot; {{ m.recurrence_label }}{% endif %}</span>
+                      {% if m.priority_id == hosted_priority_id %}
+                        <form method="post" action="{{ url_for('remove_hosted_miqaat', doc_id=m.id) }}" class="copy-form"
+                              onsubmit="return confirm('Remove this hosted miqaat?');">
+                          <input type="hidden" name="year" value="{{ hijri_year }}">
+                          <input type="hidden" name="priority" value="{{ priority if priority is not none else '' }}">
+                          <input type="hidden" name="city_id" value="{{ city.id if city else '' }}">
+                          <button type="submit" class="remove-btn">Remove</button>
+                        </form>
+                      {% elif m.id in copied_ids %}
+                        <span class="already-copied">Already copied to {{ priority_names.get(hosted_priority_id, "ASChicago Hosted") }}</span>
+                      {% else %}
+                        <form method="post" action="{{ url_for('copy_miqaat_to_hosted', doc_id=m.id) }}" class="copy-form">
+                          <input type="hidden" name="year" value="{{ hijri_year }}">
+                          <input type="hidden" name="priority" value="{{ priority if priority is not none else '' }}">
+                          <input type="hidden" name="city_id" value="{{ city.id if city else '' }}">
+                          <button type="submit" class="copy-btn">Copy to {{ priority_names.get(hosted_priority_id, "ASChicago Hosted") }}</button>
+                        </form>
+                      {% endif %}
                     </li>
                   {% endfor %}
                 </ul>
@@ -115,8 +120,8 @@
       <br>
       JSON API: <code>/api/miqats/today</code>, <code>/api/miqats/YYYY-MM-DD</code> (Gregorian date), <code>/api/miqats/year/YYYY</code> (Hijri year) &mdash; all accept <code>?priority=1|2|3&amp;city_id=</code>. City search: <code>/api/cities?q=</code>. CSV export: <code>/download.csv?year=&amp;priority=&amp;city_id=</code>.
     </footer>
-  </main>
-  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+{% endblock %}
+
+{% block scripts %}
   <script src="{{ url_for('static', filename='app.js') }}"></script>
-</body>
-</html>
+{% endblock %}

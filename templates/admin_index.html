@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Admin &mdash; Miqat List{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+      <h1>Admin &mdash; Collections</h1>
+      <a class="year-nav" href="{{ url_for('settings.index') }}">&larr; Settings</a>
+    </div>
+    <p class="admin-note">Local dev only &mdash; read-only, no write actions here.</p>
+
+    <table class="miqaats">
+      <thead>
+        <tr><th>Collection</th><th>Documents</th></tr>
+      </thead>
+      <tbody>
+        {% for c in collections %}
+          <tr>
+            <td><a href="{{ url_for('admin.browse_collection', collection=c.name) }}">{{ c.name }}</a></td>
+            <td>{{ c.count }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+{% endblock %}

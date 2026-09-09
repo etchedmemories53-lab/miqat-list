@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Add Miqat/Majalis &mdash; Miqat List{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+      <h1>Add Miqat/Majalis</h1>
+      <a class="year-nav" href="{{ url_for('index') }}">&larr; Back to app</a>
+    </div>
+
+    {% if error %}<p class="none">{{ error }}</p>{% endif %}
+
+    <form method="post" action="{{ url_for('create_miqaat') }}" class="miqaat-form">
+      <label>
+        Title
+        <input type="text" name="title" required value="{{ form.get('title', '') }}">
+      </label>
+
+      <label>
+        Description <span class="optional">(optional)</span>
+        <textarea name="description" rows="2">{{ form.get('description', '') }}</textarea>
+      </label>
+
+      <label>
+        Phase
+        <select name="phase">
+          <option value="day" {{ "selected" if form.get('phase', 'day') == 'day' else "" }}>Day (sun)</option>
+          <option value="night" {{ "selected" if form.get('phase') == 'night' else "" }}>Night (moon)</option>
+        </select>
+      </label>
+
+      <fieldset class="recurrence-fieldset">
+        <legend>Recurs on</legend>
+
+        <label class="radio-label">
+          <input type="radio" name="recurrence_type" value="hijri" id="recur-hijri"
+                 {{ "checked" if form.get('recurrence_type', 'hijri') == 'hijri' else "" }}>
+          A specific Hijri date, every year
+        </label>
+        <div class="recurrence-fields" id="hijri-fields">
+          <label>
+            Hijri Month
+            <select name="hijri_month">
+              {% for name in month_names %}
+                <option value="{{ loop.index0 }}" {{ "selected" if form.get('hijri_month') == loop.index0|string else "" }}>{{ name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+          <label>
+            Hijri Day
+            <input type="number" name="hijri_day" min="1" max="30" value="{{ form.get('hijri_day', '') }}">
+          </label>
+        </div>
+
+        <label class="radio-label">
+          <input type="radio" name="recurrence_type" value="weekly" id="recur-weekly"
+                 {{ "checked" if form.get('recurrence_type') == 'weekly' else "" }}>
+          Every week, on a day of the week
+        </label>
+        <div class="recurrence-fields" id="weekly-fields">
+          <label>
+            Day of week
+            <select name="weekday">
+              {% for name in weekday_names %}
+                <option value="{{ loop.index0 }}" {{ "selected" if form.get('weekday') == loop.index0|string else "" }}>{{ name }}</option>
+              {% endfor %}
+            </select>
+          </label>
+        </div>
+      </fieldset>
+
+      <button type="submit">Add to ASChicago Hosted</button>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='miqaat_form.js') }}"></script>
+{% endblock %}

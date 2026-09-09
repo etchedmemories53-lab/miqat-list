@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Access Requests &mdash; Miqat List{% endblock %}
+
+{% macro user_row(r, actions) %}
+  <li class="access-row">
+    <div class="access-user">
+      {% if r.picture %}<img src="{{ r.picture }}" alt="" class="user-avatar">{% endif %}
+      <div>
+        <div class="access-name">{{ r.name or r.email }}</div>
+        <div class="access-email">{{ r.email }}</div>
+      </div>
+    </div>
+    <div class="access-meta">{{ r.timestamp_label }}</div>
+    <div class="access-actions">
+      {% for label, endpoint, cls in actions %}
+        <form method="post" action="{{ url_for(endpoint, email=r.id) }}" class="copy-form">
+          <button type="submit" class="{{ cls }}">{{ label }}</button>
+        </form>
+      {% endfor %}
+    </div>
+  </li>
+{% endmacro %}
+
+{% block content %}
+    <div class="page-header">
+      <h1>Access Requests</h1>
+      <a class="year-nav" href="{{ url_for('settings.index') }}">&larr; Settings</a>
+    </div>
+
+    <section class="access-section">
+      <h2>Pending ({{ pending|length }})</h2>
+      {% if pending %}
+        <ul class="access-list">
+          {% for r in pending %}
+            {{ user_row(r, [("Approve", "settings.approve", "copy-btn"), ("Deny", "settings.deny", "remove-btn")]) }}
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="none">No pending requests.</p>
+      {% endif %}
+    </section>
+
+    <section class="access-section">
+      <h2>Approved ({{ approved|length }})</h2>
+      {% if approved %}
+        <ul class="access-list">
+          {% for r in approved %}
+            {{ user_row(r, [("Revoke", "settings.revoke", "remove-btn")]) }}
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="none">No approved users yet.</p>
+      {% endif %}
+    </section>
+
+    <section class="access-section">
+      <h2>Denied ({{ denied|length }})</h2>
+      {% if denied %}
+        <ul class="access-list">
+          {% for r in denied %}
+            {{ user_row(r, [("Approve", "settings.approve", "copy-btn"), ("Remove", "settings.revoke", "remove-btn")]) }}
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="none">No denied requests.</p>
+      {% endif %}
+    </section>
+
+    <p class="admin-note">Bootstrap admins (set via the <code>ALLOWED_EMAILS</code> env var) always have access and aren't listed here.</p>
+{% endblock %}

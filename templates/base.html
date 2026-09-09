@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Miqat List{% endblock %}</title>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="topnav">
+    <div class="topnav-bar">
+      <a class="brand" href="{{ url_for('index') }}">Miqat List</a>
+      <button type="button" id="nav-toggle" class="nav-toggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="nav-menu">
+        <span></span><span></span><span></span>
+      </button>
+      <nav id="nav-menu" class="nav-menu">
+        <a href="{{ url_for('index') }}" class="nav-link">Home</a>
+        {% if current_user and current_user.is_admin %}
+          <a href="{{ url_for('settings.index') }}" class="nav-link">
+            Settings
+            {% if pending_count %}<span class="nav-badge">{{ pending_count }}</span>{% endif %}
+          </a>
+        {% endif %}
+        <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Toggle light/dark mode">🌙</button>
+        {% if current_user %}
+          <span class="nav-user" title="{{ current_user.email }}">
+            {% if current_user.picture %}<img src="{{ current_user.picture }}" alt="" class="user-avatar">{% endif %}
+            {{ current_user.name }}
+          </span>
+          <a href="{{ url_for('auth.logout') }}" class="nav-link nav-signout">Sign out</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <script src="{{ url_for('static', filename='theme.js') }}"></script>
+  <script src="{{ url_for('static', filename='nav.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

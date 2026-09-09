@@ -34,6 +34,7 @@ gcloud services enable \
   artifactregistry.googleapis.com \
   iamcredentials.googleapis.com \
   iam.googleapis.com \
+  firestore.googleapis.com \
   --project="$PROJECT_ID"
 
 echo "==> Creating Artifact Registry repository..."
@@ -93,6 +94,29 @@ gcloud iam service-accounts add-iam-policy-binding "$RUNTIME_SERVICE_ACCOUNT_EMA
   --project="$PROJECT_ID" \
   --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
   --role="roles/iam.serviceAccountUser" \
+  >/dev/null
+
+# A GCP project gets exactly one Firestore database instance in Native mode -
+# this is a one-way choice (can't switch an existing database's mode/location
+# afterward, only delete and recreate it), so this only ever creates it, never
+# touches it if one already exists.
+echo "==> Ensuring the Firestore database exists..."
+if gcloud firestore databases describe --database="(default)" --project="$PROJECT_ID" >/dev/null 2>&1; then
+  echo "  (already exists, skipping)"
+else
+  gcloud firestore databases create \
+    --project="$PROJECT_ID" \
+    --location="$REGION" \
+    --type=firestore-native
+fi
+
+# The app's own FK-style checks (db.py) run as this service account in
+# production - it needs read/write on the database, nothing project-wide.
+echo "==> Granting Firestore access to the runtime service account..."
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+  --member="serviceAccount:${RUNTIME_SERVICE_ACCOUNT_EMAIL}" \
+  --role="roles/datastore.user" \
+  --condition=None \
   >/dev/null
 
 echo "==> Ensuring Workload Identity Pool exists..."

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Settings &mdash; Miqat List{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+      <h1>Settings</h1>
+      <a class="year-nav" href="{{ url_for('index') }}">&larr; Back to app</a>
+    </div>
+
+    <div class="settings-grid">
+      <a class="settings-card" href="{{ url_for('settings.access_requests_page') }}">
+        {% if pending_count %}<span class="nav-badge settings-card-badge">{{ pending_count }} pending</span>{% endif %}
+        <div class="settings-card-title">Access Requests</div>
+        <div class="settings-card-desc">Approve or deny Google accounts requesting access to this app.</div>
+      </a>
+      {% if admin_enabled %}
+        <a class="settings-card" href="{{ url_for('admin.index') }}">
+          <div class="settings-card-title">Database Browser</div>
+          <div class="settings-card-desc">Local dev only &mdash; browse Firestore collections directly.</div>
+        </a>
+      {% endif %}
+    </div>
+
+    <p class="admin-note">
+      Bootstrap admins (the <code>ALLOWED_EMAILS</code> env var) always have access to this app and to Settings.
+      Everyone else needs to be approved here first.
+    </p>
+{% endblock %}

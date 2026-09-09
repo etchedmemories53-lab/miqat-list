@@ -29,6 +29,13 @@ if docker ps -a --format '{{.Names}}' | grep -qx "$CONTAINER_NAME"; then
   docker rm -f "$CONTAINER_NAME" >/dev/null
 fi
 
+ENV_FILE_ARGS=()
+if [ -f .env ]; then
+  ENV_FILE_ARGS=(--env-file .env)
+else
+  echo "Warning: no .env file found - SECRET_KEY/GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET are required and the app will fail to start. Copy .env.example to .env and fill it in." >&2
+fi
+
 echo "Starting container '$CONTAINER_NAME' on http://localhost:$PORT ..."
 echo "(Ctrl+C to stop)"
-docker run --rm --name "$CONTAINER_NAME" -p "${PORT}:8080" "$IMAGE_NAME"
+docker run --rm --name "$CONTAINER_NAME" -p "${PORT}:8080" "${ENV_FILE_ARGS[@]}" "$IMAGE_NAME"

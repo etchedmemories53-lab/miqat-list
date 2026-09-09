@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Access declined" if denied else "Request sent" }} &mdash; Miqat List{% endblock %}
+
+{% block content %}
+    <div class="pending-page">
+      {% if denied %}
+        <h1>Access declined</h1>
+        <p>The Google account <strong>{{ email }}</strong> does not have access to Miqat List, and a previous request was declined by the site owner.</p>
+        <p>If you think this is a mistake, contact the site owner.</p>
+      {% else %}
+        <h1>Request sent</h1>
+        <p>Thanks{% if name %}, {{ name }}{% endif %} &mdash; your request to access Miqat List (<strong>{{ email }}</strong>) has been sent to the site owner.</p>
+        <p>You'll be able to sign in once it's approved.</p>
+      {% endif %}
+      <a class="year-nav" href="{{ url_for('auth.login') }}">Try again</a>
+    </div>
+{% endblock %}

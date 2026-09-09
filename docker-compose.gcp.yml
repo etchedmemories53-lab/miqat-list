@@ -1,0 +1,34 @@
+# Override for pointing the local app at the real GCP Firestore database
+# instead of the emulator - no downloaded service-account key involved, it
+# reuses your own `gcloud auth application-default login` credentials,
+# mounted read-only into the container at the path google-cloud-firestore
+# looks for ADC by default.
+#
+# Run from WSL specifically (not Windows-side git-bash/PowerShell) so
+# ${HOME} resolves to your Linux home and Docker Desktop's WSL2 backend can
+# mount it directly - mixing shells for docker compose on this project has
+# caused project-identity mismatches before.
+#
+# One-time setup: `gcloud auth application-default login` (opens a browser).
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.gcp.yml up -d --no-deps app
+#
+# (--no-deps skips starting the firestore-emulator container, which this
+# mode doesn't use.)
+services:
+  app:
+    environment:
+      FIRESTORE_EMULATOR_HOST: null   # unset - google-cloud-firestore then talks to real GCP
+      GOOGLE_CLOUD_PROJECT: etched-memories-app
+    volumes:
+      - ${HOME}/.config/gcloud:/root/.config/gcloud:ro
+
+  # For the one-off `docker compose ... run --rm --no-deps seed` against the
+  # real database (only needed once, to load data/miqaats.json into it).
+  seed:
+    environment:
+      FIRESTORE_EMULATOR_HOST: null
+      GOOGLE_CLOUD_PROJECT: etched-memories-app
+    volumes:
+      - ${HOME}/.config/gcloud:/root/.config/gcloud:ro

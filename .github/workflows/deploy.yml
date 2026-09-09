@@ -44,12 +44,14 @@ jobs:
       - name: Push image
         run: docker push "${IMAGE}"
 
-      # --allow-unauthenticated: this app has no login of its own, so it needs
-      # to be reachable without a Google IAM token on every request.
+      # --allow-unauthenticated: Cloud Run's own IAM layer only understands
+      # Google IAM principals, not arbitrary Google accounts with an email
+      # allowlist, so it stays open at that layer - the app enforces its own
+      # Google sign-in (see auth.py) on every route instead.
       # --service-account: without this, Cloud Run runs the container under
-      # the project's default Compute Engine service account. This app has no
-      # secrets or external APIs to reach, but a dedicated runtime identity
-      # (created by gcp/setup.sh) keeps it isolated from other apps regardless.
+      # the project's default Compute Engine service account. A dedicated
+      # runtime identity (created by gcp/setup.sh) keeps it isolated from
+      # other apps regardless.
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
@@ -57,3 +59,8 @@ jobs:
           region: ${{ env.REGION }}
           image: ${{ env.IMAGE }}
           flags: --allow-unauthenticated --service-account=${{ vars.GCP_RUNTIME_SERVICE_ACCOUNT }}
+          env_vars: |
+            GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            SECRET_KEY=${{ secrets.APP_SECRET_KEY }}
+            ALLOWED_EMAILS=${{ vars.ALLOWED_EMAILS }}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Admin &mdash; {{ collection }}{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+      <h1>Admin &mdash; {{ collection }}</h1>
+      <a class="year-nav" href="{{ url_for('admin.index') }}">&larr; All collections</a>
+    </div>
+
+    <form method="get" class="controls">
+      <label>
+        Field
+        <input type="text" name="field" value="{{ field }}" placeholder="e.g. priority_id">
+      </label>
+      <label>
+        Operator
+        <select name="operator">
+          {% for op in operators %}
+            <option value="{{ op }}" {{ "selected" if op == operator else "" }}>{{ op }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        Value
+        <input type="text" name="value" value="{{ value }}" placeholder="e.g. 4">
+      </label>
+      <button type="submit">Filter</button>
+      {% if filtered %}<a class="year-nav" href="{{ url_for('admin.browse_collection', collection=collection) }}">Clear</a>{% endif %}
+    </form>
+
+    {% if error %}
+      <p class="none">{{ error }}</p>
+    {% elif docs %}
+      <p class="admin-note">{{ docs|length }} document{{ "s" if docs|length != 1 else "" }}</p>
+      {% for d in docs %}
+        <div class="admin-doc">
+          <div class="admin-doc-id">{{ d.id }}</div>
+          <table class="admin-doc-fields">
+            {% for key, value in d.data.items() %}
+              <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+            {% endfor %}
+          </table>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="none">No documents{% if filtered %} match that filter{% endif %}.</p>
+    {% endif %}
+{% endblock %}

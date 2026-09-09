@@ -1,0 +1,34 @@
+services:
+  firestore-emulator:
+    image: google/cloud-sdk:emulators
+    command: >
+      gcloud emulators firestore start
+      --host-port=0.0.0.0:8080
+      --project=miqat-list-local
+    ports:
+      - "8090:8080"   # host access for debugging only; the app talks to it over the compose network
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      FIRESTORE_EMULATOR_HOST: firestore-emulator:8080
+      GOOGLE_CLOUD_PROJECT: miqat-list-local
+      SECRET_KEY: ${SECRET_KEY}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      ALLOWED_EMAILS: ${ALLOWED_EMAILS:-}
+    depends_on:
+      - firestore-emulator
+
+  # One-off: docker compose run --rm seed
+  seed:
+    build: .
+    command: python scripts/seed_firestore.py
+    environment:
+      FIRESTORE_EMULATOR_HOST: firestore-emulator:8080
+      GOOGLE_CLOUD_PROJECT: miqat-list-local
+    depends_on:
+      - firestore-emulator
+    profiles: ["tools"]
