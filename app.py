@@ -4,6 +4,7 @@ import os
 from datetime import date, datetime, timedelta
 
 from flask import Flask, Response, jsonify, redirect, render_template, request, url_for
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 import access_requests
 import auth
@@ -16,6 +17,14 @@ from hijri import MONTH_NAMES, HijriDate, days_in_month
 
 app = Flask(__name__)
 app.secret_key = os.environ["SECRET_KEY"]
+
+# Cloud Run terminates TLS at its own load balancer and forwards plain HTTP
+# to the container, setting X-Forwarded-Proto/Host instead - without this,
+# url_for(_external=True) (used to build the OAuth redirect_uri) sees the
+# request as http:// and builds a redirect_uri that no longer matches the
+# https:// one registered with Google, failing with redirect_uri_mismatch.
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
 auth.init_app(app)
 app.register_blueprint(settings.bp)
 
