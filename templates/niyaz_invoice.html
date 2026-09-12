@@ -42,16 +42,30 @@
         </div>
       </div>
 
-      <table class="invoice-table invoice-items">
-        <thead><tr><th>Item</th><th>Amount</th></tr></thead>
-        <tbody>
-          {% for item in record.line_items %}
-            <tr><td>{{ item.label }}</td><td>${{ "%.2f"|format(item.amount or 0) }}</td></tr>
-          {% endfor %}
-          <tr class="invoice-total-row"><td>Total</td><td>${{ "%.2f"|format(total_cost) }}</td></tr>
-          <tr class="invoice-total-row"><td>Cost per Thal</td><td>{{ "$%.2f"|format(cost_per_thal) if cost_per_thal is not none else "—" }}</td></tr>
-        </tbody>
-      </table>
+      <div class="invoice-columns">
+        <div class="invoice-col-main">
+          <table class="invoice-table invoice-items">
+            <thead><tr><th>Item</th><th>Amount</th></tr></thead>
+            <tbody>
+              {% for item in record.line_items %}
+                <tr><td>{{ item.label }}</td><td>${{ "%.2f"|format(item.amount or 0) }}</td></tr>
+              {% endfor %}
+              <tr class="invoice-total-row"><td>Total</td><td>${{ "%.2f"|format(total_cost) }}</td></tr>
+              <tr class="invoice-total-row"><td>Cost per Thal</td><td>{{ "$%.2f"|format(cost_per_thal) if cost_per_thal is not none else "—" }}</td></tr>
+            </tbody>
+          </table>
+        </div>
+        {% if menu_items %}
+          <div class="invoice-col-side">
+            <h3>Menu</h3>
+            <ul class="invoice-menu-list">
+              {% for item in menu_items %}
+                <li>{% if item.label %}<strong>{{ item.label }}</strong>{% endif %}{% if item.label and item.details %}: {% endif %}{{ item.details }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        {% endif %}
+      </div>
     </div>
 
     <div class="invoice-actions">

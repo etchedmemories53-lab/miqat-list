@@ -74,13 +74,15 @@ def build(miqaat_title: str, gregorian_date: str, record: dict) -> bytes:
     line_items = record.get("line_items") or []
     total = niyaz.total_cost(line_items)
     per_thal = niyaz.cost_per_thal(line_items, record.get("thals"))
+    menu_items = [item for item in (record.get("menu_items") or []) if item.get("label") or item.get("details")]
 
     item_rows = [["Item", "Amount"]]
     item_rows += [[item.get("label", ""), f"${item.get('amount') or 0:.2f}"] for item in line_items]
     item_rows.append(["Total", f"${total:.2f}"])
     item_rows.append(["Cost per Thal", f"${per_thal:.2f}" if per_thal is not None else "—"])
 
-    items_table = Table(item_rows, colWidths=[4.6 * inch, 2.0 * inch])
+    items_col_widths = [3.0 * inch, 1.6 * inch] if menu_items else [4.6 * inch, 2.0 * inch]
+    items_table = Table(item_rows, colWidths=items_col_widths)
     items_table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#b5651d")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
@@ -92,7 +94,20 @@ def build(miqaat_title: str, gregorian_date: str, record: dict) -> bytes:
         ("TOPPADDING", (0, 0), (-1, -1), 5),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
     ]))
-    story.append(items_table)
+
+    if menu_items:
+        menu_column = [Paragraph("Menu", party_heading)]
+        for item in menu_items:
+            text = f"<b>{item.get('label', '')}</b>" if item.get("label") else ""
+            if item.get("details"):
+                text += (": " if text else "") + item["details"]
+            menu_column.append(Paragraph(text, party_value))
+
+        columns_table = Table([[items_table, menu_column]], colWidths=[4.8 * inch, 1.8 * inch])
+        columns_table.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP")]))
+        story.append(columns_table)
+    else:
+        story.append(items_table)
 
     doc.build(story)
     return buffer.getvalue()

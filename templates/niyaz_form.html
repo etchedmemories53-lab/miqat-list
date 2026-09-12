@@ -17,61 +17,92 @@
 
     {% if error %}<p class="none">{{ error }}</p>{% endif %}
 
-    <form method="post" action="{{ url_for('save_niyaz', miqaat_id=miqaat_id, gregorian_date=gregorian_date) }}" class="miqaat-form niyaz-form">
-      <input type="hidden" name="year" value="{{ year or '' }}">
-      <input type="hidden" name="priority" value="{{ priority or '' }}">
-      <input type="hidden" name="city_id" value="{{ city_id or '' }}">
+    <div class="form-tabs" role="tablist">
+      <button type="button" class="form-tab" data-tab="finance" aria-selected="true">Finance</button>
+      <button type="button" class="form-tab" data-tab="menu" aria-selected="false">Menu</button>
+    </div>
 
-      <label class="thals-field">
-        Number of Thals
-        <input type="number" name="thals" id="thals-input" min="1" step="1" required
-               value="{{ record.thals if record and record.thals is not none else '' }}">
-      </label>
+    <div class="form-tab-panel" id="tab-panel-finance">
+      <form method="post" action="{{ url_for('save_niyaz', miqaat_id=miqaat_id, gregorian_date=gregorian_date) }}" class="miqaat-form niyaz-form">
+        <input type="hidden" name="year" value="{{ year or '' }}">
+        <input type="hidden" name="priority" value="{{ priority or '' }}">
+        <input type="hidden" name="city_id" value="{{ city_id or '' }}">
 
-      <fieldset class="niyaz-items">
-        <legend>Cost Breakdown</legend>
-        <div id="niyaz-item-rows">
-          {% for item in line_items %}
-            <div class="niyaz-item-row">
-              <input type="text" name="item_label" value="{{ item.label }}" placeholder="Item" required>
-              <input type="number" name="item_amount" value="{{ item.amount if item.amount is not none else '' }}"
-                     placeholder="Amount" min="0" step="0.01" class="niyaz-amount">
-              <button type="button" class="niyaz-remove-item" aria-label="Remove item">&times;</button>
-            </div>
-          {% endfor %}
+        <label class="thals-field">
+          Number of Thals
+          <input type="number" name="thals" id="thals-input" min="1" step="1" required
+                 value="{{ record.thals if record and record.thals is not none else '' }}">
+        </label>
+
+        <fieldset class="niyaz-items">
+          <legend>Cost Breakdown</legend>
+          <div id="niyaz-item-rows">
+            {% for item in line_items %}
+              <div class="niyaz-item-row">
+                <input type="text" name="item_label" value="{{ item.label }}" placeholder="Item" required>
+                <input type="number" name="item_amount" value="{{ item.amount if item.amount is not none else '' }}"
+                       placeholder="Amount" min="0" step="0.01" class="niyaz-amount">
+                <button type="button" class="niyaz-remove-item" aria-label="Remove item">&times;</button>
+              </div>
+            {% endfor %}
+          </div>
+          <button type="button" id="niyaz-add-item" class="niyaz-add-btn">+ Add custom item</button>
+        </fieldset>
+
+        <div class="niyaz-totals">
+          <div>Total Cost: <span id="niyaz-total">0.00</span></div>
+          <div>Cost per Thal: <span id="niyaz-per-thal">&mdash;</span></div>
         </div>
-        <button type="button" id="niyaz-add-item" class="niyaz-add-btn">+ Add custom item</button>
-      </fieldset>
 
-      <div class="niyaz-totals">
-        <div>Total Cost: <span id="niyaz-total">0.00</span></div>
-        <div>Cost per Thal: <span id="niyaz-per-thal">&mdash;</span></div>
-      </div>
+        <fieldset class="niyaz-host">
+          <legend>Host Details</legend>
+          <label>
+            Host Name
+            <input type="text" name="host_name" required value="{{ record.host_name if record else '' }}">
+          </label>
+          <label>
+            Host ITS
+            <input type="text" name="host_its" required pattern="[0-9]{8}" maxlength="8" inputmode="numeric"
+                   title="8-digit ITS number" value="{{ record.host_its if record else '' }}">
+          </label>
+          <label>
+            Email
+            <input type="email" name="host_email" required value="{{ record.host_email if record else '' }}">
+          </label>
+          <label>
+            Phone
+            <input type="tel" name="host_phone" required pattern="^\+?[0-9 ()\-]{7,20}$"
+                   title="A valid phone number" value="{{ record.host_phone if record else '' }}">
+          </label>
+        </fieldset>
 
-      <fieldset class="niyaz-host">
-        <legend>Host Details</legend>
-        <label>
-          Host Name
-          <input type="text" name="host_name" required value="{{ record.host_name if record else '' }}">
-        </label>
-        <label>
-          Host ITS
-          <input type="text" name="host_its" required pattern="[0-9]{8}" maxlength="8" inputmode="numeric"
-                 title="8-digit ITS number" value="{{ record.host_its if record else '' }}">
-        </label>
-        <label>
-          Email
-          <input type="email" name="host_email" required value="{{ record.host_email if record else '' }}">
-        </label>
-        <label>
-          Phone
-          <input type="tel" name="host_phone" required pattern="^\+?[0-9 ()\-]{7,20}$"
-                 title="A valid phone number" value="{{ record.host_phone if record else '' }}">
-        </label>
-      </fieldset>
+        <button type="submit">Save Niyaz Finance</button>
+      </form>
+    </div>
 
-      <button type="submit">Save Niyaz Details</button>
-    </form>
+    <div class="form-tab-panel" id="tab-panel-menu" hidden>
+      <form method="post" action="{{ url_for('save_niyaz_menu', miqaat_id=miqaat_id, gregorian_date=gregorian_date) }}" class="miqaat-form niyaz-form">
+        <input type="hidden" name="year" value="{{ year or '' }}">
+        <input type="hidden" name="priority" value="{{ priority or '' }}">
+        <input type="hidden" name="city_id" value="{{ city_id or '' }}">
+
+        <fieldset class="niyaz-items">
+          <legend>Menu Items</legend>
+          <div id="niyaz-menu-item-rows">
+            {% for item in menu_items %}
+              <div class="niyaz-item-row">
+                <input type="text" name="menu_item_label" value="{{ item.label }}" placeholder="Item">
+                <input type="text" name="menu_item_details" value="{{ item.details }}" placeholder="Details / specifics">
+                <button type="button" class="niyaz-remove-item" aria-label="Remove item">&times;</button>
+              </div>
+            {% endfor %}
+          </div>
+          <button type="button" id="niyaz-add-menu-item" class="niyaz-add-btn">+ Add menu item</button>
+        </fieldset>
+
+        <button type="submit">Save Niyaz Menu</button>
+      </form>
+    </div>
 {% endblock %}
 
 {% block scripts %}

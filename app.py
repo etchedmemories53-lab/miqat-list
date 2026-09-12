@@ -70,6 +70,12 @@ def _hijri_label(iso_date: str) -> str:
     return f"{hijri.day} {hijri.month_name} {hijri.year}H"
 
 
+def _invoice_menu_items(record: dict) -> list[dict]:
+    """Menu rows worth showing on the invoice - drops blank rows left over
+    from the pre-filled defaults that a host never touched."""
+    return [item for item in (record.get("menu_items") or []) if item.get("label") or item.get("details")]
+
+
 def _hijri_payload(hijri: HijriDate) -> dict:
     return {
         "year": hijri.year,
@@ -412,6 +418,7 @@ def niyaz_form(miqaat_id: str, gregorian_date: str):
 
     record = niyaz.get(miqaat_id, gregorian_date)
     line_items = (record or {}).get("line_items") or [{"label": name, "amount": None} for name in niyaz.get_default_line_item_labels()]
+    menu_items = (record or {}).get("menu_items") or [{"label": name, "details": ""} for name in niyaz.DEFAULT_MENU_ITEMS]
 
     return render_template(
         "niyaz_form.html",
@@ -420,6 +427,7 @@ def niyaz_form(miqaat_id: str, gregorian_date: str):
         gregorian_date=gregorian_date,
         record=record,
         line_items=line_items,
+        menu_items=menu_items,
         error=None,
         year=request.args.get("year", type=int),
         priority=request.args.get("priority", ""),
@@ -460,6 +468,8 @@ def save_niyaz(miqaat_id: str, gregorian_date: str):
 
     errors = niyaz.validate(host_name, host_its, host_email, host_phone, thals, line_items)
     if errors:
+        existing = niyaz.get(miqaat_id, gregorian_date)
+        menu_items = (existing or {}).get("menu_items") or [{"label": name, "details": ""} for name in niyaz.DEFAULT_MENU_ITEMS]
         return render_template(
             "niyaz_form.html",
             miqaat_id=miqaat_id,
@@ -467,6 +477,7 @@ def save_niyaz(miqaat_id: str, gregorian_date: str):
             gregorian_date=gregorian_date,
             record={"host_name": host_name, "host_its": host_its, "host_email": host_email, "host_phone": host_phone, "thals": thals},
             line_items=line_items or [{"label": name, "amount": None} for name in niyaz.get_default_line_item_labels()],
+            menu_items=menu_items,
             error=" ".join(errors),
             year=form.get("year", type=int),
             priority=form.get("priority", ""),
@@ -483,6 +494,37 @@ def save_niyaz(miqaat_id: str, gregorian_date: str):
         host_phone=host_phone,
         line_items=line_items,
     )
+
+    return redirect(url_for(
+        "index",
+        year=form.get("year", type=int),
+        priority=form.get("priority", ""),
+        city_id=form.get("city_id", ""),
+    ))
+
+
+@app.post("/miqaats/<miqaat_id>/niyaz/<gregorian_date>/menu")
+@auth.login_required
+def save_niyaz_menu(miqaat_id: str, gregorian_date: str):
+    try:
+        datetime.strptime(gregorian_date, "%Y-%m-%d")
+    except ValueError:
+        return "date must be in YYYY-MM-DD format", 400
+
+    snap = db.client().collection(db.MIQAATS).document(miqaat_id).get()
+    if not snap.exists:
+        return "miqaat not found", 404
+
+    form = request.form
+    menu_items = []
+    for label, details in zip(form.getlist("menu_item_label"), form.getlist("menu_item_details")):
+        label = label.strip()
+        details = details.strip()
+        if not label and not details:
+            continue
+        menu_items.append({"label": label, "details": details})
+
+    niyaz.save_menu(miqaat_id, gregorian_date, menu_items)
 
     return redirect(url_for(
         "index",
@@ -523,6 +565,7 @@ def niyaz_invoice(miqaat_id: str, gregorian_date: str):
         record=record,
         total_cost=niyaz.total_cost(record.get("line_items") or []),
         cost_per_thal=niyaz.cost_per_thal(record.get("line_items") or [], record.get("thals")),
+        menu_items=_invoice_menu_items(record),
         org_name=org_info.NAME,
         org_address_lines=org_info.ADDRESS_LINES,
         share_link=None,
@@ -592,6 +635,7 @@ def niyaz_invoice_share(miqaat_id: str, gregorian_date: str):
         record=record,
         total_cost=niyaz.total_cost(record.get("line_items") or []),
         cost_per_thal=niyaz.cost_per_thal(record.get("line_items") or [], record.get("thals")),
+        menu_items=_invoice_menu_items(record),
         org_name=org_info.NAME,
         org_address_lines=org_info.ADDRESS_LINES,
         share_link=url_for("public_invoice", token=token, _external=True),
@@ -613,6 +657,7 @@ def _public_invoice_context(record: dict) -> dict:
         "record": record,
         "total_cost": niyaz.total_cost(record.get("line_items") or []),
         "cost_per_thal": niyaz.cost_per_thal(record.get("line_items") or [], record.get("thals")),
+        "menu_items": _invoice_menu_items(record),
         "org_name": org_info.NAME,
         "org_address_lines": org_info.ADDRESS_LINES,
     }
@@ -673,6 +718,7 @@ def calendar_view():
                 row.append({
                     "day": day_num,
                     "iso": iso,
+                    "weekday_short": day.strftime("%a"),
                     "entries": entries_by_date.get(iso, []),
                     "hijri_year": HijriDate.from_gregorian(day).year,
                 })

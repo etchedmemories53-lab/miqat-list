@@ -10,6 +10,7 @@ Data model:
       "thals": int,
       "host_name": str, "host_its": str, "host_email": str, "host_phone": str,
       "line_items": [{"label": str, "amount": float}, ...],
+      "menu_items": [{"label": str, "details": str}, ...],
   }
 """
 
@@ -23,6 +24,11 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import db
 
 DEFAULT_LINE_ITEMS = ["Grocery - Rice", "Grocery - Meat", "Mawaid Cost", "Cleaning", "Jamaat Laagat"]
+
+DEFAULT_MENU_ITEMS = [
+    "Namak", "Kharas 1", "Roti", "Tarkari", "Rice",
+    "Gravy/Soup/Matho", "Salad", "Fruits", "Mithas", "Sharbat",
+]
 
 _DEFAULTS_COLLECTION = "app_settings"
 _DEFAULTS_DOC_ID = "niyaz_line_items"
@@ -83,6 +89,8 @@ def save(
     host_phone: str,
     line_items: list[dict],
 ) -> None:
+    """Saves the Finance half of the record - merges rather than replaces,
+    so it never wipes out a menu already saved independently via save_menu()."""
     data = {
         "miqaat_id": miqaat_id,
         "gregorian_date": gregorian_date,
@@ -93,7 +101,18 @@ def save(
         "host_phone": host_phone,
         "line_items": line_items,
     }
-    db.client().collection(db.NIYAZ).document(_doc_id(miqaat_id, gregorian_date)).set(data)
+    db.client().collection(db.NIYAZ).document(_doc_id(miqaat_id, gregorian_date)).set(data, merge=True)
+
+
+def save_menu(miqaat_id: str, gregorian_date: str, menu_items: list[dict]) -> None:
+    """Saves the Menu half of the record - merges rather than replaces, so
+    it never wipes out Finance details saved independently via save()."""
+    data = {
+        "miqaat_id": miqaat_id,
+        "gregorian_date": gregorian_date,
+        "menu_items": menu_items,
+    }
+    db.client().collection(db.NIYAZ).document(_doc_id(miqaat_id, gregorian_date)).set(data, merge=True)
 
 
 def total_cost(line_items: list[dict]) -> float:

@@ -79,31 +79,42 @@
                    {{ "checked" if form.get('recurrence_type') == 'hijri_range' else "" }}>
             A range of Hijri dates, every year
           </label>
-          <div class="recurrence-fields range-fields" id="range-fields">
-            <label>
-              From Month
-              <select name="range_start_month">
-                {% for name in month_names %}
-                  <option value="{{ loop.index0 }}" {{ "selected" if form.get('range_start_month') == loop.index0|string else "" }}>{{ name }}</option>
-                {% endfor %}
-              </select>
-            </label>
-            <label>
-              From Day
-              <input type="number" name="range_start_day" min="1" max="30" value="{{ form.get('range_start_day', '') }}">
-            </label>
-            <label>
-              To Month
-              <select name="range_end_month">
-                {% for name in month_names %}
-                  <option value="{{ loop.index0 }}" {{ "selected" if form.get('range_end_month') == loop.index0|string else "" }}>{{ name }}</option>
-                {% endfor %}
-              </select>
-            </label>
-            <label>
-              To Day
-              <input type="number" name="range_end_day" min="1" max="30" value="{{ form.get('range_end_day', '') }}">
-            </label>
+          <div class="range-fields" id="range-fields">
+            <div class="range-group">
+              <p class="range-group-label">From</p>
+              <div class="range-group-fields">
+                <label>
+                  Month
+                  <select name="range_start_month">
+                    {% for name in month_names %}
+                      <option value="{{ loop.index0 }}" {{ "selected" if form.get('range_start_month') == loop.index0|string else "" }}>{{ name }}</option>
+                    {% endfor %}
+                  </select>
+                </label>
+                <label>
+                  Day
+                  <input type="number" name="range_start_day" min="1" max="30" value="{{ form.get('range_start_day', '') }}">
+                </label>
+              </div>
+            </div>
+            <div class="range-arrow" aria-hidden="true">&rarr;</div>
+            <div class="range-group">
+              <p class="range-group-label">To</p>
+              <div class="range-group-fields">
+                <label>
+                  Month
+                  <select name="range_end_month">
+                    {% for name in month_names %}
+                      <option value="{{ loop.index0 }}" {{ "selected" if form.get('range_end_month') == loop.index0|string else "" }}>{{ name }}</option>
+                    {% endfor %}
+                  </select>
+                </label>
+                <label>
+                  Day
+                  <input type="number" name="range_end_day" min="1" max="30" value="{{ form.get('range_end_day', '') }}">
+                </label>
+              </div>
+            </div>
           </div>
         </fieldset>
 
