@@ -8,69 +8,108 @@
       <a class="year-nav" href="{{ url_for('index') }}">&larr; Back to app</a>
     </div>
 
-    {% if error %}<p class="none">{{ error }}</p>{% endif %}
+    <div class="form-tabs" role="tablist">
+      <button type="button" class="form-tab" data-tab="miqaat" aria-selected="{{ 'false' if active_tab == 'personal' else 'true' }}">Miqat/Majalis</button>
+      <button type="button" class="form-tab" data-tab="personal" aria-selected="{{ 'true' if active_tab == 'personal' else 'false' }}">Personal Function</button>
+    </div>
 
-    <form method="post" action="{{ url_for('create_miqaat') }}" class="miqaat-form">
-      <label>
-        Title
-        <input type="text" name="title" required value="{{ form.get('title', '') }}">
-      </label>
+    <div class="form-tab-panel" id="tab-panel-miqaat" {{ "hidden" if active_tab == "personal" else "" }}>
+      {% if error %}<p class="none">{{ error }}</p>{% endif %}
 
-      <label>
-        Description <span class="optional">(optional)</span>
-        <textarea name="description" rows="2">{{ form.get('description', '') }}</textarea>
-      </label>
-
-      <label>
-        Phase
-        <select name="phase">
-          <option value="day" {{ "selected" if form.get('phase', 'day') == 'day' else "" }}>Day (sun)</option>
-          <option value="night" {{ "selected" if form.get('phase') == 'night' else "" }}>Night (moon)</option>
-        </select>
-      </label>
-
-      <fieldset class="recurrence-fieldset">
-        <legend>Recurs on</legend>
-
-        <label class="radio-label">
-          <input type="radio" name="recurrence_type" value="hijri" id="recur-hijri"
-                 {{ "checked" if form.get('recurrence_type', 'hijri') == 'hijri' else "" }}>
-          A specific Hijri date, every year
+      <form method="post" action="{{ url_for('create_miqaat') }}" class="miqaat-form">
+        <label>
+          Title
+          <input type="text" name="title" required value="{{ form.get('title', '') }}">
         </label>
-        <div class="recurrence-fields" id="hijri-fields">
-          <label>
-            Hijri Month
-            <select name="hijri_month">
-              {% for name in month_names %}
-                <option value="{{ loop.index0 }}" {{ "selected" if form.get('hijri_month') == loop.index0|string else "" }}>{{ name }}</option>
-              {% endfor %}
-            </select>
-          </label>
-          <label>
-            Hijri Day
-            <input type="number" name="hijri_day" min="1" max="30" value="{{ form.get('hijri_day', '') }}">
-          </label>
-        </div>
 
-        <label class="radio-label">
-          <input type="radio" name="recurrence_type" value="weekly" id="recur-weekly"
-                 {{ "checked" if form.get('recurrence_type') == 'weekly' else "" }}>
-          Every week, on a day of the week
+        <label>
+          Description <span class="optional">(optional)</span>
+          <textarea name="description" rows="2">{{ form.get('description', '') }}</textarea>
         </label>
-        <div class="recurrence-fields" id="weekly-fields">
-          <label>
-            Day of week
-            <select name="weekday">
-              {% for name in weekday_names %}
-                <option value="{{ loop.index0 }}" {{ "selected" if form.get('weekday') == loop.index0|string else "" }}>{{ name }}</option>
-              {% endfor %}
-            </select>
-          </label>
-        </div>
-      </fieldset>
 
-      <button type="submit">Add to ASChicago Hosted</button>
-    </form>
+        <label>
+          Phase
+          <select name="phase">
+            <option value="day" {{ "selected" if form.get('phase', 'day') == 'day' else "" }}>Day (sun)</option>
+            <option value="night" {{ "selected" if form.get('phase') == 'night' else "" }}>Night (moon)</option>
+          </select>
+        </label>
+
+        <fieldset class="recurrence-fieldset">
+          <legend>Recurs on</legend>
+
+          <label class="radio-label">
+            <input type="radio" name="recurrence_type" value="hijri" id="recur-hijri"
+                   {{ "checked" if form.get('recurrence_type', 'hijri') == 'hijri' else "" }}>
+            A specific Hijri date, every year
+          </label>
+          <div class="recurrence-fields" id="hijri-fields">
+            <label>
+              Hijri Month
+              <select name="hijri_month">
+                {% for name in month_names %}
+                  <option value="{{ loop.index0 }}" {{ "selected" if form.get('hijri_month') == loop.index0|string else "" }}>{{ name }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>
+              Hijri Day
+              <input type="number" name="hijri_day" min="1" max="30" value="{{ form.get('hijri_day', '') }}">
+            </label>
+          </div>
+
+          <label class="radio-label">
+            <input type="radio" name="recurrence_type" value="weekly" id="recur-weekly"
+                   {{ "checked" if form.get('recurrence_type') == 'weekly' else "" }}>
+            Every week, on a day of the week
+          </label>
+          <div class="recurrence-fields" id="weekly-fields">
+            <label>
+              Day of week
+              <select name="weekday">
+                {% for name in weekday_names %}
+                  <option value="{{ loop.index0 }}" {{ "selected" if form.get('weekday') == loop.index0|string else "" }}>{{ name }}</option>
+                {% endfor %}
+              </select>
+            </label>
+          </div>
+        </fieldset>
+
+        <button type="submit">Add to ASChicago Hosted</button>
+      </form>
+    </div>
+
+    <div class="form-tab-panel" id="tab-panel-personal" {{ "hidden" if active_tab != "personal" else "" }}>
+      {% if personal_error %}<p class="none">{{ personal_error }}</p>{% endif %}
+
+      <form method="post" action="{{ url_for('create_personal_function') }}" class="miqaat-form">
+        <label>
+          Type
+          <select name="type" id="personal-type">
+            {% for key, label in personal_types.items() %}
+              <option value="{{ key }}" {{ "selected" if personal_form.get('type') == key else "" }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+
+        <label id="personal-custom-type-field">
+          Custom type
+          <input type="text" name="custom_type" value="{{ personal_form.get('custom_type', '') }}">
+        </label>
+
+        <label>
+          Date
+          <input type="date" name="date" required value="{{ personal_form.get('date', '') }}">
+        </label>
+
+        <label>
+          Details <span class="optional">(optional)</span>
+          <textarea name="details" rows="2">{{ personal_form.get('details', '') }}</textarea>
+        </label>
+
+        <button type="submit">Add Personal Function</button>
+      </form>
+    </div>
 {% endblock %}
 
 {% block scripts %}

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Email (SMTP) &mdash; Settings{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+      <h1>Email (SMTP) Settings</h1>
+      <a class="year-nav" href="{{ url_for('settings.index') }}">&larr; Back to Settings</a>
+    </div>
+
+    <p class="admin-note">Used to email Niyaz invoices to hosts. Leave password blank to keep the one already saved.</p>
+
+    {% if error %}<p class="none">{{ error }}</p>{% endif %}
+
+    <form method="post" action="{{ url_for('settings.save_smtp') }}" class="miqaat-form">
+      <label>
+        SMTP Host
+        <input type="text" name="host" required value="{{ config.get('host', '') }}" placeholder="smtp.gmail.com">
+      </label>
+
+      <label>
+        Port
+        <input type="number" name="port" required value="{{ config.get('port', 587) }}">
+      </label>
+
+      <label class="radio-label">
+        <input type="checkbox" name="use_tls" {{ "checked" if config.get('use_tls', True) else "" }}>
+        Use STARTTLS
+      </label>
+
+      <label>
+        Username
+        <input type="text" name="username" value="{{ config.get('username', '') }}">
+      </label>
+
+      <label>
+        Password <span class="optional">(leave blank to keep current)</span>
+        <input type="password" name="password" value="">
+      </label>
+
+      <label>
+        From Email
+        <input type="email" name="from_email" required value="{{ config.get('from_email', '') }}">
+      </label>
+
+      <label>
+        From Name <span class="optional">(optional)</span>
+        <input type="text" name="from_name" value="{{ config.get('from_name', '') }}">
+      </label>
+
+      <button type="submit">Save SMTP Settings</button>
+    </form>
+{% endblock %}

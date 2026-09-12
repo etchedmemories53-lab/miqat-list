@@ -47,6 +47,7 @@
             <th>Date</th>
             {% if city %}<th>Sun</th>{% endif %}
             <th>Miqaat</th>
+            <th>Niyaz</th>
           </tr>
         </thead>
         <tbody>
@@ -69,27 +70,79 @@
               <td>
                 <ul>
                   {% for m in entry.miqaats %}
-                    <li class="priority-{{ m.priority_id }}">
-                      <span class="title">{{ m.title }}</span>
-                      {% if m.description %}<span class="description">{{ m.description }}</span>{% endif %}
-                      <span class="meta">phase: {{ m.phase }} &middot; priority: {{ m.priority_id }} &mdash; {{ priority_names.get(m.priority_id, m.priority_id) }}{% if m.recurrence_label %} &middot; {{ m.recurrence_label }}{% endif %}</span>
-                      {% if m.priority_id == hosted_priority_id %}
-                        <form method="post" action="{{ url_for('remove_hosted_miqaat', doc_id=m.id) }}" class="copy-form"
-                              onsubmit="return confirm('Remove this hosted miqaat?');">
+                    {% if m.kind == "personal" %}
+                      <li class="personal-function">
+                        <span class="title">{{ m.title }}</span>
+                        {% if m.description %}<span class="description">{{ m.description }}</span>{% endif %}
+                        <span class="meta">personal function</span>
+                        <form method="post" action="{{ url_for('remove_personal_function', function_id=m.id) }}" class="copy-form"
+                              onsubmit="return confirm('Remove this personal function?');">
                           <input type="hidden" name="year" value="{{ hijri_year }}">
                           <input type="hidden" name="priority" value="{{ priority if priority is not none else '' }}">
                           <input type="hidden" name="city_id" value="{{ city.id if city else '' }}">
                           <button type="submit" class="remove-btn">Remove</button>
                         </form>
-                      {% elif m.id in copied_ids %}
-                        <span class="already-copied">Already copied to {{ priority_names.get(hosted_priority_id, "ASChicago Hosted") }}</span>
+                      </li>
+                    {% else %}
+                      <li class="priority-{{ m.priority_id }}">
+                        <span class="title">{{ m.title }}</span>
+                        {% if m.description %}<span class="description">{{ m.description }}</span>{% endif %}
+                        {% if m.combined_with %}<span class="combined-note">Also serves as {{ m.combined_with }}</span>{% endif %}
+                        <span class="meta">phase: {{ m.phase }} &middot; priority: {{ m.priority_id }} &mdash; {{ priority_names.get(m.priority_id, m.priority_id) }}{% if m.recurrence_label %} &middot; {{ m.recurrence_label }}{% endif %}</span>
+                        {% if m.priority_id == hosted_priority_id %}
+                          <form method="post" action="{{ url_for('remove_hosted_miqaat', doc_id=m.id) }}" class="copy-form"
+                                onsubmit="return confirm('Remove this hosted miqaat?');">
+                            <input type="hidden" name="year" value="{{ hijri_year }}">
+                            <input type="hidden" name="priority" value="{{ priority if priority is not none else '' }}">
+                            <input type="hidden" name="city_id" value="{{ city.id if city else '' }}">
+                            <button type="submit" class="remove-btn">Remove</button>
+                          </form>
+                        {% elif m.id in copied_ids %}
+                          <span class="already-copied">Already copied to {{ priority_names.get(hosted_priority_id, "ASChicago Hosted") }}</span>
+                        {% else %}
+                          <form method="post" action="{{ url_for('copy_miqaat_to_hosted', doc_id=m.id) }}" class="copy-form">
+                            <input type="hidden" name="year" value="{{ hijri_year }}">
+                            <input type="hidden" name="priority" value="{{ priority if priority is not none else '' }}">
+                            <input type="hidden" name="city_id" value="{{ city.id if city else '' }}">
+                            <button type="submit" class="copy-btn">Copy to {{ priority_names.get(hosted_priority_id, "ASChicago Hosted") }}</button>
+                          </form>
+                        {% endif %}
+                      </li>
+                    {% endif %}
+                  {% endfor %}
+                </ul>
+              </td>
+              <td class="niyaz-cell">
+                <ul>
+                  {% for m in entry.miqaats %}
+                    <li>
+                      {% if m.kind != "personal" and m.priority_id == hosted_priority_id %}
+                        {% set niyaz_key = m.id ~ "__" ~ entry.gregorian_date %}
+                        {% set summary = niyaz_summaries.get(niyaz_key) %}
+                        {% if summary %}
+                          <div class="niyaz-summary">
+                            <div class="niyaz-host-name">{{ summary.host_name }}</div>
+                            <div class="niyaz-total">${{ "%.2f"|format(summary.total_cost) }}</div>
+                          </div>
+                          <div class="niyaz-actions">
+                            <a class="niyaz-btn has-niyaz"
+                               href="{{ url_for('niyaz_form', miqaat_id=m.id, gregorian_date=entry.gregorian_date, year=hijri_year, priority=(priority if priority is not none else ''), city_id=(city.id if city else '')) }}">Edit</a>
+                            <a class="niyaz-btn"
+                               href="{{ url_for('niyaz_invoice', miqaat_id=m.id, gregorian_date=entry.gregorian_date, year=hijri_year, priority=(priority if priority is not none else ''), city_id=(city.id if city else '')) }}">Invoice</a>
+                            <form method="post" action="{{ url_for('delete_niyaz', miqaat_id=m.id, gregorian_date=entry.gregorian_date) }}" class="niyaz-delete-form"
+                                  onsubmit="return confirm('Delete this Niyaz record? This cannot be undone.');">
+                              <input type="hidden" name="year" value="{{ hijri_year }}">
+                              <input type="hidden" name="priority" value="{{ priority if priority is not none else '' }}">
+                              <input type="hidden" name="city_id" value="{{ city.id if city else '' }}">
+                              <button type="submit" class="niyaz-btn niyaz-delete-btn">Delete</button>
+                            </form>
+                          </div>
+                        {% else %}
+                          <a class="niyaz-btn"
+                             href="{{ url_for('niyaz_form', miqaat_id=m.id, gregorian_date=entry.gregorian_date, year=hijri_year, priority=(priority if priority is not none else ''), city_id=(city.id if city else '')) }}">Add Niyaz Details</a>
+                        {% endif %}
                       {% else %}
-                        <form method="post" action="{{ url_for('copy_miqaat_to_hosted', doc_id=m.id) }}" class="copy-form">
-                          <input type="hidden" name="year" value="{{ hijri_year }}">
-                          <input type="hidden" name="priority" value="{{ priority if priority is not none else '' }}">
-                          <input type="hidden" name="city_id" value="{{ city.id if city else '' }}">
-                          <button type="submit" class="copy-btn">Copy to {{ priority_names.get(hosted_priority_id, "ASChicago Hosted") }}</button>
-                        </form>
+                        <span class="niyaz-na">&mdash;</span>
                       {% endif %}
                     </li>
                   {% endfor %}

@@ -20,6 +20,8 @@ from google.cloud import firestore
 
 PRIORITIES = "priorities"
 MIQAATS = "miqaats"
+NIYAZ = "niyaz"
+PERSONAL_FUNCTIONS = "personal_functions"
 
 _client: firestore.Client | None = None
 

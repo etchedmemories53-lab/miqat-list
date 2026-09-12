@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Niyaz Invoice &mdash; {{ miqaat_title }}</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("theme");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="public-invoice-page">
+    <div class="invoice-card" id="invoice-print-area">
+      <div class="invoice-header">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="{{ org_name }}" class="invoice-logo">
+        <h1>Niyaz Invoice</h1>
+        <p class="invoice-miqaat-title">{{ miqaat_title }}</p>
+        <p class="invoice-date">{{ gregorian_date }} &middot; {{ hijri_date }}</p>
+      </div>
+
+      <div class="invoice-parties">
+        <div class="invoice-party">
+          <h3>Host Details</h3>
+          <p><strong>Name:</strong> {{ record.host_name }}</p>
+          <p><strong>ITS:</strong> {{ record.host_its }}</p>
+          <p><strong>Email:</strong> {{ record.host_email }}</p>
+          <p><strong>Phone:</strong> {{ record.host_phone }}</p>
+          <p><strong>Number of Thals:</strong> {{ record.thals }}</p>
+        </div>
+        <div class="invoice-party invoice-party-org">
+          <h3>{{ org_name }}</h3>
+          {% for line in org_address_lines %}<p>{{ line }}</p>{% endfor %}
+        </div>
+      </div>
+
+      <table class="invoice-table invoice-items">
+        <thead><tr><th>Item</th><th>Amount</th></tr></thead>
+        <tbody>
+          {% for item in record.line_items %}
+            <tr><td>{{ item.label }}</td><td>${{ "%.2f"|format(item.amount or 0) }}</td></tr>
+          {% endfor %}
+          <tr class="invoice-total-row"><td>Total</td><td>${{ "%.2f"|format(total_cost) }}</td></tr>
+          <tr class="invoice-total-row"><td>Cost per Thal</td><td>{{ "$%.2f"|format(cost_per_thal) if cost_per_thal is not none else "—" }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="invoice-actions">
+      <button type="button" id="invoice-print-btn">Print</button>
+      <a class="invoice-btn" href="{{ url_for('public_invoice_pdf', token=token) }}">Download PDF</a>
+    </div>
+  </main>
+  <script>
+    document.getElementById("invoice-print-btn").addEventListener("click", function () { window.print(); });
+  </script>
+</body>
+</html>

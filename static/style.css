@@ -48,6 +48,11 @@ main {
   margin-bottom: 1.25rem;
 }
 
+.page-header-links {
+  display: flex;
+  gap: 1rem;
+}
+
 h1 {
   font-size: 1.4rem;
   margin: 0;
@@ -437,6 +442,13 @@ table.miqaats td ul li.priority-4 {
   border-color: #c0392b;
 }
 
+.combined-note {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--accent);
+  font-style: italic;
+}
+
 .already-copied {
   display: inline-block;
   margin-top: 0.15rem;
@@ -638,6 +650,525 @@ table.miqaats td ul li.priority-4 {
   padding: 0.55rem 1.1rem;
   font: inherit;
   cursor: pointer;
+}
+
+.form-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.25rem;
+}
+
+.form-tab {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.2rem;
+  margin-bottom: -1px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.form-tab[aria-selected="true"] {
+  color: var(--fg);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.form-tab-panel[hidden] {
+  display: none;
+}
+
+.niyaz-cell ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.niyaz-na {
+  color: var(--muted);
+}
+
+.niyaz-btn {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.niyaz-btn:hover {
+  color: var(--fg);
+  border-color: var(--accent);
+}
+
+.niyaz-btn.has-niyaz {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.niyaz-summary {
+  font-size: 0.8rem;
+}
+
+.niyaz-host-name {
+  font-weight: 600;
+}
+
+.niyaz-total {
+  color: var(--muted);
+}
+
+.niyaz-actions {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+.niyaz-delete-form {
+  display: inline-block;
+}
+
+button.niyaz-btn {
+  font: inherit;
+  background: var(--bg);
+  cursor: pointer;
+}
+
+.niyaz-delete-btn {
+  color: #c0392b;
+}
+
+.niyaz-delete-btn:hover {
+  background: #c0392b;
+  color: #fff;
+  border-color: #c0392b;
+}
+
+li.personal-function {
+  border-left-color: #7a5ca6;
+}
+
+.niyaz-subtitle {
+  color: var(--muted);
+  margin: -0.5rem 0 1.25rem;
+}
+
+.niyaz-form {
+  max-width: 32rem;
+}
+
+.thals-field {
+  max-width: 12rem;
+}
+
+.niyaz-items,
+.niyaz-host {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.niyaz-items legend,
+.niyaz-host legend {
+  font-size: 0.85rem;
+  color: var(--muted);
+  padding: 0 0.3rem;
+}
+
+.niyaz-item-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.niyaz-item-row input[type="text"] {
+  flex: 2;
+}
+
+.niyaz-item-row input.niyaz-amount {
+  flex: 1;
+}
+
+.niyaz-remove-item {
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.niyaz-remove-item:hover {
+  color: #c0392b;
+  border-color: #c0392b;
+}
+
+.niyaz-add-btn {
+  align-self: flex-start;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.niyaz-add-btn:hover {
+  border-color: var(--accent);
+}
+
+.niyaz-totals {
+  display: flex;
+  gap: 1.5rem;
+  font-weight: 600;
+}
+
+.invoice-flash {
+  padding: 0.6rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.invoice-flash.success {
+  background: color-mix(in srgb, #2e7d32 15%, transparent);
+  color: #2e7d32;
+}
+
+.invoice-flash.error {
+  background: color-mix(in srgb, #c0392b 15%, transparent);
+  color: #c0392b;
+}
+
+.share-reveal {
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+}
+
+.share-reveal code {
+  background: var(--border);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  word-break: break-all;
+}
+
+.invoice-card {
+  max-width: 38rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.invoice-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.invoice-logo {
+  max-width: 6.5rem;
+  height: auto;
+  margin-bottom: 0.5rem;
+}
+
+.invoice-card h2, .invoice-card h1 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.invoice-miqaat-title {
+  font-weight: 600;
+  margin: 0.6rem 0 0;
+}
+
+.invoice-date {
+  color: var(--muted);
+  margin: 0.2rem 0 0;
+  font-size: 0.9rem;
+}
+
+.invoice-parties {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.invoice-party {
+  flex: 1;
+  min-width: 12rem;
+}
+
+.invoice-party h3 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+.invoice-party p {
+  margin: 0.2rem 0;
+  font-size: 0.9rem;
+}
+
+.invoice-party-org {
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .invoice-parties {
+    flex-direction: column;
+  }
+
+  .invoice-party-org {
+    text-align: left;
+  }
+}
+
+.invoice-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.invoice-table th {
+  text-align: left;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 0.3rem 0.75rem 0.3rem 0;
+  white-space: nowrap;
+  vertical-align: top;
+}
+
+.invoice-table td {
+  padding: 0.3rem 0;
+  width: 100%;
+}
+
+.invoice-items th {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.4rem;
+}
+
+.invoice-items td {
+  padding: 0.3rem 0;
+}
+
+.invoice-items td:last-child, .invoice-items th:last-child {
+  text-align: right;
+}
+
+.invoice-total-row td {
+  font-weight: 700;
+  border-top: 1px solid var(--border);
+  padding-top: 0.5rem;
+}
+
+.invoice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.invoice-actions button,
+.invoice-btn {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--fg);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.invoice-actions button:hover,
+.invoice-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.invoice-inline-form {
+  display: inline-block;
+}
+
+.invoice-delete-btn {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: #c0392b;
+  cursor: pointer;
+}
+
+.invoice-delete-btn:hover {
+  background: #c0392b;
+  color: #fff;
+  border-color: #c0392b;
+}
+
+.public-invoice-page {
+  max-width: 34rem;
+  margin: 3rem auto;
+  padding: 0 1.25rem 3rem;
+  color: var(--fg);
+  background: var(--bg);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.cal-controls {
+  justify-content: space-between;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.cal-legend {
+  display: flex;
+  gap: 1.25rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 1rem;
+}
+
+.cal-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cal-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.cal-dot.cal-hosted, li.cal-hosted {
+  background: #3b82c4;
+}
+
+.cal-dot.cal-personal, li.cal-personal {
+  background: #7a5ca6;
+}
+
+.cal-table-wrap {
+  overflow-x: auto;
+}
+
+table.cal-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 42rem;
+}
+
+table.cal-table th {
+  text-align: center;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  padding-bottom: 0.5rem;
+}
+
+table.cal-table td.cal-day {
+  border: 1px solid var(--border);
+  vertical-align: top;
+  padding: 0.4rem;
+  height: 6rem;
+  width: 14.28%;
+}
+
+table.cal-table td.cal-day.empty {
+  background: color-mix(in srgb, var(--border) 30%, transparent);
+}
+
+table.cal-table td.cal-day.today {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-color: var(--accent);
+}
+
+.cal-daynum {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+table.cal-table td.cal-day.today .cal-daynum {
+  color: var(--accent);
+}
+
+ul.cal-entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+ul.cal-entries li {
+  color: #fff;
+  font-size: 0.68rem;
+  border-radius: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+ul.cal-entries li a {
+  display: block;
+  padding: 0.05rem 0.3rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+ul.cal-entries li a:hover {
+  text-decoration: underline;
+}
+
+@media print {
+  .topnav, .invoice-actions, .share-reveal, .invoice-flash, footer {
+    display: none !important;
+  }
+
+  main, .public-invoice-page {
+    padding: 0;
+    margin: 0;
+    max-width: none;
+  }
+
+  .invoice-card {
+    border: none;
+    max-width: none;
+  }
 }
 
 .title {
@@ -842,5 +1373,24 @@ footer code {
 
   .meta {
     font-size: 0.7rem;
+  }
+
+  .niyaz-item-row {
+    flex-wrap: wrap;
+  }
+
+  .niyaz-item-row input[type="text"] {
+    flex: 1 1 100%;
+  }
+
+  .niyaz-item-row input.niyaz-amount {
+    flex: 1 1 auto;
+  }
+
+  table.miqaats td.niyaz-cell {
+    display: flex;
+    padding-top: 0.4rem;
+    margin-top: 0.4rem;
+    border-top: 1px solid var(--border);
   }
 }

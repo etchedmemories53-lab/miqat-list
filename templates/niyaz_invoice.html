@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Invoice &mdash; {{ miqaat_title }}{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+      <h1>Niyaz Invoice</h1>
+      <a class="year-nav" href="{{ url_for('index', year=year, priority=priority, city_id=city_id) }}">&larr; Back to app</a>
+    </div>
+
+    {% if mail_sent %}<p class="invoice-flash success">Emailed to {{ record.host_email }}.</p>{% endif %}
+    {% if mail_error %}<p class="invoice-flash error">{{ mail_error }}</p>{% endif %}
+
+    {% if share_link %}
+      <div class="share-reveal">
+        <p><strong>Share link generated.</strong> Copy this link and password to the host now &mdash; the password won't be shown again.</p>
+        <p>Link: <code>{{ share_link }}</code></p>
+        <p>Password: <code>{{ share_password }}</code></p>
+      </div>
+    {% endif %}
+
+    <div class="invoice-card" id="invoice-print-area">
+      <div class="invoice-header">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="{{ org_name }}" class="invoice-logo">
+        <h2>Niyaz Invoice</h2>
+        <p class="invoice-miqaat-title">{{ miqaat_title }}</p>
+        <p class="invoice-date">{{ gregorian_date }} &middot; {{ hijri_date }}</p>
+      </div>
+
+      <div class="invoice-parties">
+        <div class="invoice-party">
+          <h3>Host Details</h3>
+          <p><strong>Name:</strong> {{ record.host_name }}</p>
+          <p><strong>ITS:</strong> {{ record.host_its }}</p>
+          <p><strong>Email:</strong> {{ record.host_email }}</p>
+          <p><strong>Phone:</strong> {{ record.host_phone }}</p>
+          <p><strong>Number of Thals:</strong> {{ record.thals }}</p>
+        </div>
+        <div class="invoice-party invoice-party-org">
+          <h3>{{ org_name }}</h3>
+          {% for line in org_address_lines %}<p>{{ line }}</p>{% endfor %}
+        </div>
+      </div>
+
+      <table class="invoice-table invoice-items">
+        <thead><tr><th>Item</th><th>Amount</th></tr></thead>
+        <tbody>
+          {% for item in record.line_items %}
+            <tr><td>{{ item.label }}</td><td>${{ "%.2f"|format(item.amount or 0) }}</td></tr>
+          {% endfor %}
+          <tr class="invoice-total-row"><td>Total</td><td>${{ "%.2f"|format(total_cost) }}</td></tr>
+          <tr class="invoice-total-row"><td>Cost per Thal</td><td>{{ "$%.2f"|format(cost_per_thal) if cost_per_thal is not none else "—" }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="invoice-actions">
+      <button type="button" id="invoice-print-btn">Print</button>
+      <a class="invoice-btn" href="{{ url_for('niyaz_invoice_pdf', miqaat_id=miqaat_id, gregorian_date=gregorian_date) }}">Download PDF</a>
+      <form method="post" action="{{ url_for('niyaz_invoice_email', miqaat_id=miqaat_id, gregorian_date=gregorian_date) }}" class="invoice-inline-form">
+        <button type="submit">Email to Host</button>
+      </form>
+      <form method="post" action="{{ url_for('niyaz_invoice_share', miqaat_id=miqaat_id, gregorian_date=gregorian_date) }}" class="invoice-inline-form">
+        <input type="hidden" name="year" value="{{ year or '' }}">
+        <input type="hidden" name="priority" value="{{ priority or '' }}">
+        <input type="hidden" name="city_id" value="{{ city_id or '' }}">
+        <button type="submit">{{ 'Regenerate Share Link' if record.share_token else 'Generate Share Link' }}</button>
+      </form>
+      <form method="post" action="{{ url_for('delete_niyaz', miqaat_id=miqaat_id, gregorian_date=gregorian_date) }}" class="invoice-inline-form"
+            onsubmit="return confirm('Delete this Niyaz record? This cannot be undone.');">
+        <input type="hidden" name="year" value="{{ year or '' }}">
+        <input type="hidden" name="priority" value="{{ priority or '' }}">
+        <input type="hidden" name="city_id" value="{{ city_id or '' }}">
+        <button type="submit" class="invoice-delete-btn">Delete Invoice</button>
+      </form>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    document.getElementById("invoice-print-btn").addEventListener("click", function () { window.print(); });
+  </script>
+{% endblock %}

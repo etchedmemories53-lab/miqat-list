@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Calendar &mdash; Miqat List{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+      <h1>Calendar &mdash; {{ month_name }} {{ year }}</h1>
+    </div>
+
+    <div class="controls cal-controls">
+      <a class="year-nav" href="{{ url_for('calendar_view', year=prev_year, month=prev_month) }}">&larr; {{ prev_month_name }}</a>
+      <a class="year-nav" href="{{ url_for('calendar_view', year=next_year, month=next_month) }}">{{ next_month_name }} &rarr;</a>
+    </div>
+
+    <div class="cal-legend">
+      <span class="cal-legend-item"><span class="cal-dot cal-hosted"></span> Hosted Miqaat</span>
+      <span class="cal-legend-item"><span class="cal-dot cal-personal"></span> Personal Function</span>
+    </div>
+
+    <div class="cal-table-wrap">
+      <table class="cal-table">
+        <thead>
+          <tr>
+            {% for name in weekday_headers %}<th>{{ name }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for week in weeks %}
+            <tr>
+              {% for cell in week %}
+                {% if cell is none %}
+                  <td class="cal-day empty"></td>
+                {% else %}
+                  <td class="cal-day {{ 'today' if cell.iso == today_iso else '' }}">
+                    <div class="cal-daynum">{{ cell.day }}</div>
+                    <ul class="cal-entries">
+                      {% for m in cell.entries %}
+                        <li class="{{ 'cal-personal' if m.kind == 'personal' else 'cal-hosted' }}">
+                          {% if m.kind == 'personal' %}
+                            <a href="{{ url_for('index', year=cell.hijri_year) }}" title="{{ m.title }}">{{ m.title }}</a>
+                          {% else %}
+                            <a href="{{ url_for('niyaz_invoice', miqaat_id=m.id, gregorian_date=cell.iso, year=cell.hijri_year) }}" title="{{ m.title }}">{{ m.title }}</a>
+                          {% endif %}
+                        </li>
+                      {% endfor %}
+                    </ul>
+                  </td>
+                {% endif %}
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+{% endblock %}

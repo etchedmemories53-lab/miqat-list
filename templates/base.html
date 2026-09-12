@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Miqat List{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
   <script>
     (function () {
       try {
@@ -24,6 +26,7 @@
       </button>
       <nav id="nav-menu" class="nav-menu">
         <a href="{{ url_for('index') }}" class="nav-link">Home</a>
+        <a href="{{ url_for('calendar_view') }}" class="nav-link">Calendar</a>
         {% if current_user and current_user.is_admin %}
           <a href="{{ url_for('settings.index') }}" class="nav-link">
             Settings
