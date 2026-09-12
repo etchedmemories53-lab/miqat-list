@@ -57,6 +57,20 @@ def revoke(email: str):
     return redirect(url_for("settings.access_requests_page"))
 
 
+@bp.post("/access/<email>/promote")
+@auth.admin_required
+def promote(email: str):
+    access_requests.promote_to_admin(email)
+    return redirect(url_for("settings.access_requests_page"))
+
+
+@bp.post("/access/<email>/demote")
+@auth.admin_required
+def demote(email: str):
+    access_requests.demote_from_admin(email)
+    return redirect(url_for("settings.access_requests_page"))
+
+
 @bp.get("/smtp")
 @auth.admin_required
 def smtp_page():

@@ -2,17 +2,28 @@
 
 {% block title %}Access Requests &mdash; Miqat List{% endblock %}
 
-{% macro user_row(r, actions) %}
+{% macro user_row(r, actions, show_admin_toggle=false) %}
   <li class="access-row">
     <div class="access-user">
       {% if r.picture %}<img src="{{ r.picture }}" alt="" class="user-avatar">{% endif %}
       <div>
-        <div class="access-name">{{ r.name or r.email }}</div>
+        <div class="access-name">{{ r.name or r.email }}{% if r.is_admin %}<span class="nav-badge">Admin</span>{% endif %}</div>
         <div class="access-email">{{ r.email }}</div>
       </div>
     </div>
     <div class="access-meta">{{ r.timestamp_label }}</div>
     <div class="access-actions">
+      {% if show_admin_toggle %}
+        {% if r.is_admin %}
+          <form method="post" action="{{ url_for('settings.demote', email=r.id) }}" class="copy-form">
+            <button type="submit" class="remove-btn">Revoke Admin</button>
+          </form>
+        {% else %}
+          <form method="post" action="{{ url_for('settings.promote', email=r.id) }}" class="copy-form">
+            <button type="submit" class="copy-btn">Make Admin</button>
+          </form>
+        {% endif %}
+      {% endif %}
       {% for label, endpoint, cls in actions %}
         <form method="post" action="{{ url_for(endpoint, email=r.id) }}" class="copy-form">
           <button type="submit" class="{{ cls }}">{{ label }}</button>
@@ -46,7 +57,7 @@
       {% if approved %}
         <ul class="access-list">
           {% for r in approved %}
-            {{ user_row(r, [("Revoke", "settings.revoke", "remove-btn")]) }}
+            {{ user_row(r, [("Revoke", "settings.revoke", "remove-btn")], show_admin_toggle=true) }}
           {% endfor %}
         </ul>
       {% else %}

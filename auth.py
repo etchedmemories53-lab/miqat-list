@@ -83,6 +83,9 @@ def callback():
         if status != access_requests.APPROVED:
             access_requests.upsert_pending(email, name, picture)
             return render_template("pending.html", name=name, email=email, denied=(status == access_requests.DENIED))
+        # Bootstrap admins always come from ALLOWED_EMAILS; everyone else can
+        # only be an admin if a bootstrap admin promoted them from Settings.
+        is_admin = access_requests.is_admin(email)
 
     session["user"] = {"email": email, "name": name, "picture": picture, "is_admin": is_admin}
     next_url = session.pop("post_login_redirect", None)

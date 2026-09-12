@@ -66,6 +66,19 @@ def count_pending() -> int:
     return sum(1 for _ in db.client().collection(ACCESS_REQUESTS).where("status", "==", PENDING).stream())
 
 
+def is_admin(email: str) -> bool:
+    snap = _ref(email).get()
+    return bool(snap.exists and snap.to_dict().get("is_admin"))
+
+
+def promote_to_admin(email: str) -> None:
+    _ref(email).set({"is_admin": True}, merge=True)
+
+
+def demote_from_admin(email: str) -> None:
+    _ref(email).set({"is_admin": False}, merge=True)
+
+
 def approve(email: str) -> None:
     _ref(email).set({"status": APPROVED, "decided_at": firestore.SERVER_TIMESTAMP}, merge=True)
 
