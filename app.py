@@ -80,27 +80,34 @@ def _hijri_payload(hijri: HijriDate) -> dict:
     }
 
 
+_GENERIC_RECURRENCE_TYPES = ("weekly", "hijri_range")
+
+
 def _merge_weekly_duplicates(entries: list[dict]) -> list[dict]:
-    """Fold a weekly-recurring entry (e.g. "Jumeraat Majalis") into whichever
-    non-recurring miqaat lands on the same date, instead of listing both -
-    a specific miqaat's majalis on a Thursday already covers that week's
-    standing Thursday majalis, so showing them as two separate rows
-    overstates what's actually happening that day.
+    """Fold a generic recurring entry - a weekly "Jumeraat Majalis", or a
+    date-range host miqaat like "Ashara Mubaraka" (1-10 Moharram) - into
+    whichever specific-date miqaat lands on the same day, instead of listing
+    both. A specific miqaat's own majalis that day already covers the
+    generic recurring one (the standing Thursday majalis, or that day's
+    Ashara majalis), so showing them as two separate rows overstates what's
+    actually happening that day.
     """
-    weekly = [e for e in entries if e.get("recurrence_type") == "weekly"]
-    non_weekly = [e for e in entries if e.get("recurrence_type") != "weekly"]
-    if not weekly or not non_weekly:
+    generic = [e for e in entries if e.get("recurrence_type") in _GENERIC_RECURRENCE_TYPES]
+    specific = [e for e in entries if e.get("recurrence_type") not in _GENERIC_RECURRENCE_TYPES]
+    if not generic or not specific:
         return entries
 
-    merged = [dict(e) for e in non_weekly]
-    merged[0]["combined_with"] = ", ".join(w["title"] for w in weekly)
+    merged = [dict(e) for e in specific]
+    merged[0]["combined_with"] = ", ".join(g["title"] for g in generic)
     return merged
 
 
 def _day_payload(gregorian: date, priority: str | None, city: dict | None) -> dict:
     hijri = HijriDate.from_gregorian(gregorian)
     entries = _merge_weekly_duplicates(
-        miqaats.for_hijri_date(hijri, priority=priority) + miqaats.for_weekday(gregorian.weekday(), priority=priority)
+        miqaats.for_hijri_date(hijri, priority=priority)
+        + miqaats.for_hijri_range(hijri, priority=priority)
+        + miqaats.for_weekday(gregorian.weekday(), priority=priority)
     ) + personal_functions.for_date(gregorian.isoformat())
     payload = {
         "gregorian_date": gregorian.isoformat(),
@@ -115,6 +122,7 @@ def _day_payload(gregorian: date, priority: str | None, city: dict | None) -> di
 def _year_payload(hijri_year: int, priority: str | None, city: dict | None) -> list[dict]:
     """One entry per Gregorian day within the given Hijri year that has matching miqaats."""
     index = miqaats.load_year_index(hijri_year, priority=priority)
+    range_index = miqaats.load_hijri_range_index(hijri_year, priority=priority)
     weekly_index = miqaats.load_weekly_index(priority=priority)
     day = HijriDate(hijri_year, 0, 1).to_gregorian()
     end = HijriDate(hijri_year, 11, days_in_month(hijri_year, 11)).to_gregorian()
@@ -123,7 +131,9 @@ def _year_payload(hijri_year: int, priority: str | None, city: dict | None) -> l
     while day <= end:
         hijri = HijriDate.from_gregorian(day)
         entries = _merge_weekly_duplicates(
-            index.get((hijri.month, hijri.day), []) + weekly_index.get(day.weekday(), [])
+            index.get((hijri.month, hijri.day), [])
+            + range_index.get((hijri.month, hijri.day), [])
+            + weekly_index.get(day.weekday(), [])
         ) + personal_index.get(day.isoformat(), [])
         if entries:
             entry = {
@@ -154,7 +164,9 @@ def _month_payload(year: int, month: int) -> dict[str, list[dict]]:
         day = date(year, month, day_num)
         hijri = HijriDate.from_gregorian(day)
         entries = _merge_weekly_duplicates(
-            miqaats.for_hijri_date(hijri, priority=miqaats.HOSTED_PRIORITY_ID) + weekly_index.get(day.weekday(), [])
+            miqaats.for_hijri_date(hijri, priority=miqaats.HOSTED_PRIORITY_ID)
+            + miqaats.for_hijri_range(hijri, priority=miqaats.HOSTED_PRIORITY_ID)
+            + weekly_index.get(day.weekday(), [])
         ) + personal_index.get(day.isoformat(), [])
         if entries:
             result[day.isoformat()] = entries
@@ -239,7 +251,7 @@ def create_miqaat():
     if phase not in ("day", "night"):
         errors.append("Phase must be day or night.")
 
-    hijri_month = hijri_day = weekday = None
+    hijri_month = hijri_day = weekday = end_hijri_month = end_hijri_day = None
     if recurrence_type == "hijri":
         hijri_month = form.get("hijri_month", type=int)
         hijri_day = form.get("hijri_day", type=int)
@@ -253,6 +265,30 @@ def create_miqaat():
         weekday = form.get("weekday", type=int)
         if weekday is None or not (0 <= weekday <= 6):
             errors.append("Pick a valid day of week.")
+    elif recurrence_type == "hijri_range":
+        hijri_month = form.get("range_start_month", type=int)
+        hijri_day = form.get("range_start_day", type=int)
+        end_hijri_month = form.get("range_end_month", type=int)
+        end_hijri_day = form.get("range_end_day", type=int)
+
+        if hijri_month is None or not (0 <= hijri_month <= 11):
+            errors.append("Pick a valid start Hijri month.")
+        if end_hijri_month is None or not (0 <= end_hijri_month <= 11):
+            errors.append("Pick a valid end Hijri month.")
+
+        if not errors:
+            start_max_day = days_in_month(2, hijri_month)
+            end_max_day = days_in_month(2, end_hijri_month)
+            if hijri_day is None or not (1 <= hijri_day <= start_max_day):
+                errors.append(f"Start day must be between 1 and {start_max_day} for {MONTH_NAMES[hijri_month]}.")
+            if end_hijri_day is None or not (1 <= end_hijri_day <= end_max_day):
+                errors.append(f"End day must be between 1 and {end_max_day} for {MONTH_NAMES[end_hijri_month]}.")
+
+        if not errors:
+            start_doy = HijriDate(2, hijri_month, hijri_day).day_of_year()
+            end_doy = HijriDate(2, end_hijri_month, end_hijri_day).day_of_year()
+            if end_doy < start_doy:
+                errors.append("End date must be on or after the start date within the same Hijri year.")
     else:
         errors.append("Invalid recurrence type.")
 
@@ -273,6 +309,8 @@ def create_miqaat():
         hijri_month=hijri_month,
         hijri_day=hijri_day,
         weekday=weekday,
+        end_hijri_month=end_hijri_month,
+        end_hijri_day=end_hijri_day,
     )
     return redirect(url_for("index", priority=miqaats.HOSTED_PRIORITY_ID))
 

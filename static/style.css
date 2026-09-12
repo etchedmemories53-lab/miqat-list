@@ -646,6 +646,15 @@ table.miqaats td ul li.priority-4 {
   flex: 1;
 }
 
+.range-fields {
+  flex-wrap: wrap;
+}
+
+.range-fields label {
+  flex: 1 1 calc(50% - 0.75rem);
+  min-width: 8rem;
+}
+
 .miqaat-form button[type="submit"] {
   align-self: flex-start;
   background: var(--accent);

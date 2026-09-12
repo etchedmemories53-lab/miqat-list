@@ -6,11 +6,14 @@ Data model:
       "title": str, "description": str | None, "phase": "day" | "night",
       "year": int | None,
       "priority_id": str,   # "foreign key" into priorities/{id}
-      "recurrence_type": "hijri" | "weekly",   # missing on old rows == "hijri"
+      "recurrence_type": "hijri" | "weekly" | "hijri_range",   # missing on old rows == "hijri"
       # recurrence_type == "hijri":
       "hijri_month": int, "hijri_day": int,
       # recurrence_type == "weekly":
       "weekday": int,   # 0 = Monday .. 6 = Sunday, same as date.weekday()
+      # recurrence_type == "hijri_range" (e.g. 1-10 Moharram, or all of Ramadan):
+      "hijri_month": int, "hijri_day": int,             # start (inclusive)
+      "end_hijri_month": int, "end_hijri_day": int,     # end (inclusive), same Hijri year - no wraparound
   }
 
 Originally sourced from https://github.com/mygulamali/mumineen_calendar_js
@@ -25,7 +28,7 @@ from __future__ import annotations
 from typing import Optional
 
 import db
-from hijri import HijriDate
+from hijri import MONTH_NAMES, HijriDate
 
 HOSTED_PRIORITY_ID = "4"
 
@@ -36,6 +39,15 @@ def _entry_dict(doc) -> dict:
     data = doc.to_dict()
     recurrence_type = data.get("recurrence_type", "hijri")
     weekday = data.get("weekday")
+
+    recurrence_label = None
+    if recurrence_type == "weekly" and weekday is not None:
+        recurrence_label = f"every {WEEKDAY_NAMES[weekday]}"
+    elif recurrence_type == "hijri_range":
+        start = f"{data['hijri_day']} {MONTH_NAMES[data['hijri_month']]}"
+        end = f"{data['end_hijri_day']} {MONTH_NAMES[data['end_hijri_month']]}"
+        recurrence_label = f"{start} – {end}, every year"
+
     return {
         "id": doc.id,
         "title": data["title"],
@@ -45,7 +57,7 @@ def _entry_dict(doc) -> dict:
         "priority_id": data["priority_id"],
         "recurrence_type": recurrence_type,
         "weekday": weekday,
-        "recurrence_label": f"every {WEEKDAY_NAMES[weekday]}" if recurrence_type == "weekly" and weekday is not None else None,
+        "recurrence_label": recurrence_label,
     }
 
 
@@ -94,6 +106,47 @@ def load_year_index(hijri_year: int, priority: Optional[str] = None) -> dict[tup
     return index
 
 
+def for_hijri_range(hijri: HijriDate, priority: Optional[str] = None) -> list[dict]:
+    """Miqaats/urus whose Hijri date range (e.g. 1-10 Moharram) includes this date."""
+    query = db.client().collection(db.MIQAATS).where("recurrence_type", "==", "hijri_range")
+    if priority is not None:
+        query = query.where("priority_id", "==", priority)
+
+    doy = hijri.day_of_year()
+    result = []
+    for doc in query.stream():
+        data = doc.to_dict()
+        if data.get("year") is not None and data["year"] > hijri.year:
+            continue
+        start_doy = HijriDate(hijri.year, data["hijri_month"], data["hijri_day"]).day_of_year()
+        end_doy = HijriDate(hijri.year, data["end_hijri_month"], data["end_hijri_day"]).day_of_year()
+        if start_doy <= doy <= end_doy:
+            result.append(_entry_dict(doc))
+    return result
+
+
+def load_hijri_range_index(hijri_year: int, priority: Optional[str] = None) -> dict[tuple[int, int], list[dict]]:
+    """(hijri_month, hijri_day) -> matching entries, for every day within any
+    hijri_range miqaat's span in the given Hijri year - mirrors load_year_index
+    so the whole year's view is still one Firestore read for this recurrence type."""
+    query = db.client().collection(db.MIQAATS).where("recurrence_type", "==", "hijri_range")
+    if priority is not None:
+        query = query.where("priority_id", "==", priority)
+
+    index: dict[tuple[int, int], list[dict]] = {}
+    for doc in query.stream():
+        data = doc.to_dict()
+        if data.get("year") is not None and data["year"] > hijri_year:
+            continue
+        entry = _entry_dict(doc)
+        start_doy = HijriDate(hijri_year, data["hijri_month"], data["hijri_day"]).day_of_year()
+        end_doy = HijriDate(hijri_year, data["end_hijri_month"], data["end_hijri_day"]).day_of_year()
+        for doy in range(start_doy, end_doy + 1):
+            key_date = HijriDate.from_day_of_year(hijri_year, doy)
+            index.setdefault((key_date.month, key_date.day), []).append(entry)
+    return index
+
+
 def for_weekday(weekday: int, priority: Optional[str] = None) -> list[dict]:
     """Weekly-recurring miqaats/majalis that fall on the given weekday (0=Monday..6=Sunday)."""
     query = (
@@ -131,6 +184,8 @@ def create_hosted(
     hijri_month: Optional[int] = None,
     hijri_day: Optional[int] = None,
     weekday: Optional[int] = None,
+    end_hijri_month: Optional[int] = None,
+    end_hijri_day: Optional[int] = None,
 ) -> str:
     """User-authored addition, straight into the "ASChicago Hosted" priority.
 
@@ -152,6 +207,11 @@ def create_hosted(
         data["hijri_day"] = hijri_day
     elif recurrence_type == "weekly":
         data["weekday"] = weekday
+    elif recurrence_type == "hijri_range":
+        data["hijri_month"] = hijri_month
+        data["hijri_day"] = hijri_day
+        data["end_hijri_month"] = end_hijri_month
+        data["end_hijri_day"] = end_hijri_day
     else:
         raise ValueError(f"unknown recurrence_type {recurrence_type!r}")
 

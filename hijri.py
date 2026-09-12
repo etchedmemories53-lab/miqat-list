@@ -113,6 +113,18 @@ class HijriDate:
         return DAYS_IN_YEAR[self.month] + self.day
 
     @staticmethod
+    def from_day_of_year(year: int, doy: int) -> "HijriDate":
+        """Inverse of day_of_year() - used to expand a Hijri date range
+        (e.g. 1-10 Moharram) into individual (month, day) pairs."""
+        month = 0
+        for m in range(12):
+            if DAYS_IN_YEAR[m] < doy:
+                month = m
+            else:
+                break
+        return HijriDate(year, month, doy - DAYS_IN_YEAR[month])
+
+    @staticmethod
     def from_ajd(ajd: float) -> "HijriDate":
         left = math.floor(ajd - 1948083.5)
         y30 = left // 10631

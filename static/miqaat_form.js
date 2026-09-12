@@ -3,15 +3,19 @@
 
   var hijriRadio = document.getElementById("recur-hijri");
   var weeklyRadio = document.getElementById("recur-weekly");
+  var rangeRadio = document.getElementById("recur-range");
   var hijriFields = document.getElementById("hijri-fields");
   var weeklyFields = document.getElementById("weekly-fields");
-  if (hijriRadio && weeklyRadio && hijriFields && weeklyFields) {
+  var rangeFields = document.getElementById("range-fields");
+  if (hijriRadio && weeklyRadio && rangeRadio && hijriFields && weeklyFields && rangeFields) {
     var syncRecurrence = function () {
       hijriFields.hidden = !hijriRadio.checked;
       weeklyFields.hidden = !weeklyRadio.checked;
+      rangeFields.hidden = !rangeRadio.checked;
     };
     hijriRadio.addEventListener("change", syncRecurrence);
     weeklyRadio.addEventListener("change", syncRecurrence);
+    rangeRadio.addEventListener("change", syncRecurrence);
     syncRecurrence();
   }
 
