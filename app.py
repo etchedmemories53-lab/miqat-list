@@ -715,12 +715,14 @@ def calendar_view():
             else:
                 day = date(year, month, day_num)
                 iso = day.isoformat()
+                hijri = HijriDate.from_gregorian(day)
                 row.append({
                     "day": day_num,
                     "iso": iso,
                     "weekday_short": day.strftime("%a"),
                     "entries": entries_by_date.get(iso, []),
-                    "hijri_year": HijriDate.from_gregorian(day).year,
+                    "hijri_year": hijri.year,
+                    "hijri_label": f"{hijri.day} {hijri.month_name_short}",
                 })
         weeks.append(row)
 

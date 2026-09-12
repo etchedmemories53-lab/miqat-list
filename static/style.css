@@ -1184,6 +1184,7 @@ li.personal-function {
 table.cal-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
   min-width: 42rem;
 }
 
@@ -1200,8 +1201,9 @@ table.cal-table td.cal-day {
   border: 1px solid var(--border);
   vertical-align: top;
   padding: 0.4rem;
-  height: 6rem;
+  min-height: 6rem;
   width: 14.28%;
+  overflow: hidden;
 }
 
 table.cal-table td.cal-day.empty {
@@ -1228,6 +1230,13 @@ table.cal-table td.cal-day.today .cal-daynum {
   display: none;
 }
 
+.cal-hijri {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+
 ul.cal-entries {
   list-style: none;
   margin: 0;
@@ -1241,9 +1250,7 @@ ul.cal-entries li {
   color: #fff;
   font-size: 0.68rem;
   border-radius: 3px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: break-word;
 }
 
 ul.cal-entries li a {
@@ -1531,7 +1538,7 @@ footer code {
 
   table.cal-table td.cal-day {
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
     gap: 0.6rem;
     width: 100%;
     height: auto;

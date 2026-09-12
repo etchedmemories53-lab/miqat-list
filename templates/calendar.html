@@ -32,7 +32,10 @@
                   <td class="cal-day empty"></td>
                 {% else %}
                   <td class="cal-day {{ 'today' if cell.iso == today_iso else '' }}">
-                    <div class="cal-daynum">{{ cell.day }}<span class="cal-weekday-mobile">{{ cell.weekday_short }}</span></div>
+                    <div class="cal-daynum">
+                      {{ cell.day }}<span class="cal-weekday-mobile">{{ cell.weekday_short }}</span>
+                      <span class="cal-hijri">{{ cell.hijri_label }}</span>
+                    </div>
                     <ul class="cal-entries">
                       {% for m in cell.entries %}
                         <li class="{{ 'cal-personal' if m.kind == 'personal' else 'cal-hosted' }}">
